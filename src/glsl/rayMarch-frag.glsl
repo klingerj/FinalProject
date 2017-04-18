@@ -92,21 +92,53 @@ float un(float d1, float d2)
     return min(d1,d2);
 }
 
+//returns transformed point based on rotation and translation matrix of shape
+vec3 transform(vec3 point, mat4 trans)
+{
+	//columns of the rotation matrix transpose
+	vec3 col1 = vec3(trans[0][0], trans[1][0], trans[2][0]);
+	vec3 col2 = vec3(trans[0][1], trans[1][1], trans[2][1]);
+	vec3 col3 = vec3(trans[0][2], trans[1][2], trans[2][2]);
+
+	mat3 rotTranspose = mat3(col1, col2, col3);
+
+	vec3 col4 = -1.0*rotTranspose*vec3(trans[3]);
+
+	mat4 newTrans = mat4(vec4(col1, 0.0), vec4(col2, 0.0), vec4(col3, 0.0), vec4(col4, 1.0));
+
+	return vec3(newTrans * vec4(point, 1.0));
+}
+
 // Return the distance of the closest object in the scene
 float sceneMap( vec3 pos ) {
 	return SDF_Sphere( pos, 1.0 );
 }
 
 float sceneMap2( vec3 pos ){
-	vec3 newPos1 = pos + vec3(0, 1.5, 0);
-	vec3 newPos2 = pos + vec3(1.5, 0, 0);
-	vec3 newPos3 = pos + vec3(-1.5, 0, 0);
-	vec3 newPos4 = pos + vec3(0, 0, 1.5);
-	vec3 newPos5 = pos + vec3(0, 0, -1.5);
-	vec3 newPos6 = pos + vec3(2, -1.5, 2);
-	vec3 newPos7 = pos + vec3(-2, -1.5, -2);
-	vec3 newPos8 = pos + vec3(-2, -1.5, 2);
-	vec3 newPos9 = pos + vec3(2, -1.5, -2);
+	float angle = u_time/(2.0*3.1415);
+	mat4 cwMat = mat4(1.0); //transform for moving clockwise
+	cwMat[0][0] = cos(angle); cwMat[0][2] = -sin(angle); cwMat[2][0] = sin(angle); cwMat[2][2] = cos(angle); //rotating about y-axis, based on utime
+	mat4 ccwMat = mat4(1.0); //transform for moving counterclockwise
+	ccwMat[0][0] = cos(-angle); ccwMat[0][2] = -sin(-angle); ccwMat[2][0] = sin(-angle); ccwMat[2][2] = cos(-angle); //rotating about y-axis, based on utime
+
+	mat4 northMat = mat4(1.0); 
+	northMat[1][1] = cos(angle); northMat[1][2] = sin(angle); northMat[2][1] = -sin(angle); northMat[2][2] = cos(angle); //rotating about x-axis, based on utime
+	mat4 southMat = mat4(1.0); 
+	southMat[1][1] = cos(-angle); southMat[1][2] = sin(-angle); southMat[2][1] = -sin(-angle); southMat[2][2] = cos(-angle); //rotating about x-axis, based on utime
+	mat4 westMat = mat4(1.0); 
+	westMat[0][0] = cos(-angle); westMat[0][1] = sin(-angle); westMat[1][0] = -sin(-angle); westMat[1][1] = cos(-angle); //rotating about z-axis, based on utime
+	mat4 eastMat = mat4(1.0); 
+	eastMat[0][0] = cos(angle); eastMat[0][1] = sin(angle); eastMat[1][0] = -sin(angle); eastMat[1][1] = cos(angle); //rotating about z-axis, based on utime
+
+	vec3 newPos1 = transform(pos + vec3(0, 1.5, 0), cwMat);
+	vec3 newPos2 = transform(transform(pos + vec3(1.5, 0, 0), ccwMat), eastMat);
+	vec3 newPos3 = transform(transform(pos + vec3(-1.5, 0, 0), ccwMat), westMat);
+	vec3 newPos4 = transform(transform(pos + vec3(0, 0, 1.5), ccwMat), northMat);
+	vec3 newPos5 = transform(transform(pos + vec3(0, 0, -1.5), ccwMat), southMat);
+	vec3 newPos6 = transform(pos + vec3(2, -1.5, 2), cwMat);
+	vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);
+	vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);
+	vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
 	float man1 = SDF_Mandlebulb(newPos1, 10.0);
 	float man2 = SDF_Mandlebulb(newPos2, 16.0);
 	float man3 = SDF_Mandlebulb(newPos3, 16.0);
@@ -116,6 +148,7 @@ float sceneMap2( vec3 pos ){
 	float man7 = SDF_Mandlebulb(newPos7, 24.0);
 	float man8 = SDF_Mandlebulb(newPos8, 24.0);
 	float man9 = SDF_Mandlebulb(newPos9, 24.0);
+	//return un(man1, un(man2, un(man3, un(man4, man5))));
 	return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 }
 
@@ -162,13 +195,13 @@ void main() {
 	vec2 point_NDC = 2.0 * vec2(gl_FragCoord.x / u_resolution.x,
 								gl_FragCoord.y / u_resolution.y) - 1.0;
 
-	vec3 cameraPos = vec3(0.0, 0.0, 0.0);
+	vec3 cameraPos = vec3(.000001, -10.0, .000001);
 	
 	// Circle the origin (0, 0, 0)
-	cameraPos.x = sin(u_time) * 10.0;
-	cameraPos.z = cos(u_time) * 10.0;
+//	cameraPos.x = sin(u_time) * 10.0;
+//	cameraPos.z = cos(u_time) * 10.0;
 	
-	float len = 20.0; // assume the reference point is at 0, 0, 0
+	float len = 15.0; // assume the reference point is at 0, 0, 0
 	
 	
 	// Compute camera's frame of reference

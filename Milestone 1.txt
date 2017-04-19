@@ -4,7 +4,9 @@ Joe fully completed the ray-marcher (basically all the work of Hw 6) and it seem
 
 Tabatha got a working Mandelbulb to appear in Joe's ray-marcher. It took a lot of time to understand iq's code, cross-reference it with examples on shadertoy, and tweek and experiment with numbers to find an implementation that made a Mandelbulb show up. With the remainder of her time, Tabatha set up a basic, but aesthetically pleasing scene with several Mandelbulbs rotating about different axes.
 
-You can view our current demo at https://github.com/tabathah/FinalProject. Note it is extremely slow and WebGL might need to reload, but it works! 
+You should be able to view our current demo at https://tabathah.github.io/FinalProject. Note it is extremely slow and WebGL might need to reload, but it works!
+
+If this doesn't load or the deploy didn't work (because I'm not convinced it did), there are some images of the scene in the folder milestone1Pics.
 
 Things that we did not foresee that we definitely want to improve for the next milestone along with the plans in our design doc include:
 - possibly optimizing the ray-marcher even further, as when a single Mandelbulb is in the scene, the FPS reaches a max of 3

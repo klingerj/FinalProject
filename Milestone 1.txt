@@ -1,0 +1,15 @@
+Milestone 1:
+
+Joe fully completed the ray-marcher (basically all the work of Hw 6) and it seems to be well optimized. (A sphere or any other basic geometry runs faster than 30 FPS.) He implemented some additional features like Lambertian shading.
+
+Tabatha got a working Mandelbulb to appear in Joe's ray-marcher. It took a lot of time to understand iq's code, cross-reference it with examples on shadertoy, and tweek and experiment with numbers to find an implementation that made a Mandelbulb show up. With the remainder of her time, Tabatha set up a basic, but aesthetically pleasing scene with several Mandelbulbs rotating about different axes.
+
+You can view our current demo at https://github.com/tabathah/FinalProject. Note it is extremely slow and WebGL might need to reload, but it works! 
+
+Things that we did not foresee that we definitely want to improve for the next milestone along with the plans in our design doc include:
+- possibly optimizing the ray-marcher even further, as when a single Mandelbulb is in the scene, the FPS reaches a max of 3
+- using tiling functions for the multiple Mandelbulbs in the scene, so that one call to the Mandelbulb function will suffice for all Mandelbulbs in the scene
+- coloring the Mandelbulbs in some other way than Lamertian shading, as this seems to fial to convey all the detail in the geometry (we will be creating post-processing shaders as well)
+
+
+

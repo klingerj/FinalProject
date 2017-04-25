@@ -1,6 +1,6 @@
 
 #define MAX_GEOMETRY_COUNT 100
-#define SPHERE_TRACING true
+#define SPHERE_TRACING false
 #define T_MAX 40.0
 
 /* This is how I'm packing the data
@@ -25,6 +25,12 @@ http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
 float SDF_Sphere( vec3 pos, float radius ) {
 	return length(pos) - radius;
+}
+
+//diagonal is the vector from the center of the box to the first quadrant corner
+float boxSDF(vec3 point, vec3 diagonal) {
+	vec3 d = abs(point) - diagonal;
+  	return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
 }
 
 float SDF_Mandlebulb( vec3 p , float manPower)
@@ -139,26 +145,81 @@ float sceneMap2( vec3 pos ){
 	vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);
 	vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);
 	vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
-	float man1 = SDF_Mandlebulb(newPos1, 10.0);
-	float man2 = SDF_Mandlebulb(newPos2, 16.0);
-	float man3 = SDF_Mandlebulb(newPos3, 16.0);
-	float man4 = SDF_Mandlebulb(newPos4, 16.0);
-	float man5 = SDF_Mandlebulb(newPos5, 16.0);
-	float man6 = SDF_Mandlebulb(newPos6, 24.0);
-	float man7 = SDF_Mandlebulb(newPos7, 24.0);
-	float man8 = SDF_Mandlebulb(newPos8, 24.0);
-	float man9 = SDF_Mandlebulb(newPos9, 24.0);
-	//return un(man1, un(man2, un(man3, un(man4, man5))));
-	return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
+	
+	float dist1;
+	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
+	if(bb1 < .015)
+	{
+		dist1 = SDF_Mandlebulb(newPos1, 10.0);
+	}
+	else
+	{
+		dist1 = bb1;
+	}
+
+	float dist2;
+	float bb2 = boxSDF(newPos2, vec3(1.2,1.2,1.2));
+	if(bb2 < .015)
+	{
+		dist2 = SDF_Mandlebulb(newPos2, 16.0);
+	}
+	else
+	{
+		dist2 = bb2;
+	}
+
+	float dist3;
+	float bb3 = boxSDF(newPos3, vec3(1.2,1.2,1.2));
+	if(bb3 < .015)
+	{
+		dist3 = SDF_Mandlebulb(newPos3, 16.0);
+	}
+	else
+	{
+		dist3 = bb3;
+	}
+
+	float dist4;
+	float bb4 = boxSDF(newPos4, vec3(1.2,1.2,1.2));
+	if(bb4 < .015)
+	{
+		dist4 = SDF_Mandlebulb(newPos4, 16.0);
+	}
+	else
+	{
+		dist4 = bb4;
+	}
+
+	float dist5;
+	float bb5 = boxSDF(newPos5, vec3(1.2,1.2,1.2));
+	if(bb5 < .015)
+	{
+		dist5 = SDF_Mandlebulb(newPos5, 16.0);
+	}
+	else
+	{
+		dist5 = bb5;
+	}
+
+	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
+	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
+	//float man4 = SDF_Mandlebulb(newPos4, 16.0);
+	//float man5 = SDF_Mandlebulb(newPos5, 16.0);
+	//float man6 = SDF_Mandlebulb(newPos6, 24.0);
+	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
+	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
+	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
+	return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
+	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 }
 
 // Compute the normal of an implicit surface using the gradient method
 vec3 computeNormal( vec3 pos ) {
 	vec2 point = vec2(0.0001, 0.0);
 	vec3 normal = normalize(
-			   vec3(sceneMap(pos + point.xyy) - sceneMap(pos - point.xyy),
-					sceneMap(pos + point.yxy) - sceneMap(pos - point.yxy),
-					sceneMap(pos + point.yyx) - sceneMap(pos - point.yyx)));
+			   vec3(sceneMap2(pos + point.xyy) - sceneMap2(pos - point.xyy),
+					sceneMap2(pos + point.yxy) - sceneMap2(pos - point.yxy),
+					sceneMap2(pos + point.yyx) - sceneMap2(pos - point.yyx)));
 	return normal;
 }
 
@@ -196,10 +257,11 @@ void main() {
 								gl_FragCoord.y / u_resolution.y) - 1.0;
 
 	vec3 cameraPos = vec3(.000001, -10.0, .000001);
+	//vec3 cameraPos = vec3(1, 0, 1);
 	
 	// Circle the origin (0, 0, 0)
-//	cameraPos.x = sin(u_time) * 10.0;
-//	cameraPos.z = cos(u_time) * 10.0;
+	//cameraPos.x = sin(u_time) * 10.0;
+	//cameraPos.z = cos(u_time) * 10.0;
 	
 	float len = 15.0; // assume the reference point is at 0, 0, 0
 	
@@ -234,8 +296,9 @@ void main() {
 		
 		// Apply lambertian shading - for now
 		gl_FragColor = vec4( baseMaterial * sun * vec3(sunDot), 1 );
+		//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);
 	} else {
 		// Background color
-		gl_FragColor = vec4(f_uv, 0, 1);
+		gl_FragColor = vec4(0.5, 0.5, 0.5, 1);
 	}
 }

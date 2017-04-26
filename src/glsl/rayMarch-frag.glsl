@@ -1,7 +1,7 @@
 
 #define MAX_GEOMETRY_COUNT 100
 #define SPHERE_TRACING false
-#define T_MAX 40.0
+#define T_MAX 20.0
 
 /* This is how I'm packing the data
 struct geometry_t {
@@ -18,6 +18,8 @@ uniform float u_time;
 uniform vec2 u_resolution;
 uniform float u_fovy;
 uniform float u_aspect;
+
+vec4 resColor;
 
 /***** Geometry SDF Functions
 http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
@@ -77,6 +79,7 @@ float SDF_Mandlebulb( vec3 p , float manPower)
             break;
     }
     trap.x = m;
+    resColor = trap;
 
     return 0.25*log(m)*sqrt(m)/dz;
 }
@@ -121,6 +124,7 @@ float sceneMap( vec3 pos ) {
 }
 
 float sceneMap2( vec3 pos ){
+
 	float angle = u_time/(2.0*3.1415);
 	mat4 cwMat = mat4(1.0); //transform for moving clockwise
 	cwMat[0][0] = cos(angle); cwMat[0][2] = -sin(angle); cwMat[2][0] = sin(angle); cwMat[2][2] = cos(angle); //rotating about y-axis, based on utime
@@ -136,70 +140,71 @@ float sceneMap2( vec3 pos ){
 	mat4 eastMat = mat4(1.0); 
 	eastMat[0][0] = cos(angle); eastMat[0][1] = sin(angle); eastMat[1][0] = -sin(angle); eastMat[1][1] = cos(angle); //rotating about z-axis, based on utime
 
-	vec3 newPos1 = transform(pos + vec3(0, 1.5, 0), cwMat);
-	vec3 newPos2 = transform(transform(pos + vec3(1.5, 0, 0), ccwMat), eastMat);
-	vec3 newPos3 = transform(transform(pos + vec3(-1.5, 0, 0), ccwMat), westMat);
-	vec3 newPos4 = transform(transform(pos + vec3(0, 0, 1.5), ccwMat), northMat);
-	vec3 newPos5 = transform(transform(pos + vec3(0, 0, -1.5), ccwMat), southMat);
-	vec3 newPos6 = transform(pos + vec3(2, -1.5, 2), cwMat);
-	vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);
-	vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);
-	vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
+	// vec3 newPos1 = transform(pos + vec3(0, 1.5, 0), cwMat);
+	// vec3 newPos2 = transform(transform(pos + vec3(1.5, 0, 0), ccwMat), eastMat);
+	// vec3 newPos3 = transform(transform(pos + vec3(-1.5, 0, 0), ccwMat), westMat);
+	// vec3 newPos4 = transform(transform(pos + vec3(0, 0, 1.5), ccwMat), northMat);
+	// vec3 newPos5 = transform(transform(pos + vec3(0, 0, -1.5), ccwMat), southMat);
+	// vec3 newPos6 = transform(pos + vec3(2, -1.5, 2), cwMat);
+	// vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);
+	// vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);
+	// vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
 	
-	float dist1;
-	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
-	if(bb1 < .015)
-	{
-		dist1 = SDF_Mandlebulb(newPos1, 10.0);
-	}
-	else
-	{
-		dist1 = bb1;
-	}
+	// float dist1;
+	// float bb1 = boxSDF(newPos1, vec3(1.5,1.5,1.5));
+	// if(bb1 < .015)
+	// {
+	// 	float power = 10.0;//12.0 + abs(sin(u_time/4.0))*40.0;
+	// 	dist1 = SDF_Mandlebulb(newPos1, power);
+	// }
+	// else
+	// {
+	// 	dist1 = bb1;
+	// }
 
-	float dist2;
-	float bb2 = boxSDF(newPos2, vec3(1.2,1.2,1.2));
-	if(bb2 < .015)
-	{
-		dist2 = SDF_Mandlebulb(newPos2, 16.0);
-	}
-	else
-	{
-		dist2 = bb2;
-	}
+	// float dist2;
+	// float bb2 = boxSDF(newPos2, vec3(1.1,1.1,1.1));
+	// if(bb2 < .015)
+	// {
+	// 	dist2 = SDF_Mandlebulb(newPos2, 16.0);
+	// }
+	// else
+	// {
+	// 	dist2 = bb2;
+	// }
 
-	float dist3;
-	float bb3 = boxSDF(newPos3, vec3(1.2,1.2,1.2));
-	if(bb3 < .015)
-	{
-		dist3 = SDF_Mandlebulb(newPos3, 16.0);
-	}
-	else
-	{
-		dist3 = bb3;
-	}
+	// float dist3;
+	// float bb3 = boxSDF(newPos3, vec3(1.1,1.1,1.1));
+	// if(bb3 < .015)
+	// {
+	// 	dist3 = SDF_Mandlebulb(newPos3, 16.0);
+	// }
+	// else
+	// {
+	// 	dist3 = bb3;
+	// }
 
-	float dist4;
-	float bb4 = boxSDF(newPos4, vec3(1.2,1.2,1.2));
-	if(bb4 < .015)
-	{
-		dist4 = SDF_Mandlebulb(newPos4, 16.0);
-	}
-	else
-	{
-		dist4 = bb4;
-	}
+	// float dist4;
+	// float bb4 = boxSDF(newPos4, vec3(1.1,1.1,1.1));
+	// if(bb4 < .015)
+	// {
+	// 	dist4 = SDF_Mandlebulb(newPos4, 16.0);
+	// }
+	// else
+	// {
+	// 	dist4 = bb4;
+	// }
 
-	float dist5;
-	float bb5 = boxSDF(newPos5, vec3(1.2,1.2,1.2));
-	if(bb5 < .015)
-	{
-		dist5 = SDF_Mandlebulb(newPos5, 16.0);
-	}
-	else
-	{
-		dist5 = bb5;
-	}
+	// float dist5;
+	// float bb5 = boxSDF(newPos5, vec3(1.1,1.1,1.1));
+	// if(bb5 < .015)
+	// {
+	// 	dist5 = SDF_Mandlebulb(newPos5, 16.0);
+	// }
+	// else
+	// {
+	// 	dist5 = bb5;
+	// }
 
 	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
 	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
@@ -209,8 +214,53 @@ float sceneMap2( vec3 pos ){
 	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
 	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
 	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
-	return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
+	
+	//return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
 	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
+
+	float dist1;
+	vec3 newPos1 = transform(transform(pos + vec3(cos((u_time+4.0)/8.0)*4.0, 0, sin(u_time/7.0)*3.5), cwMat), northMat);
+	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
+	if(bb1 < .015)
+	{
+		float power = 12.0;
+		dist1 = SDF_Mandlebulb(newPos1, power);
+	}
+	else
+	{
+		dist1 = bb1;
+	}
+
+	float dist2;
+	vec3 newPos2 = transform(transform(pos + vec3(cos((u_time+50.0)/10.0)*2.0, 1, sin((u_time+30.0)/6.0)*2.5), ccwMat), eastMat);
+	float bb2 = boxSDF(newPos2, vec3(1.1,1.1,1.1));
+	if(bb2 < .015)
+	{
+		
+		float power = 12.0;
+		dist2 = SDF_Mandlebulb(newPos2, power);
+	}
+	else
+	{
+		dist2 = bb2;
+	}
+
+	float dist3;
+	vec3 newPos3 = transform(transform(pos + vec3(sin((u_time)/16.0)*3.0, -1, cos((u_time+75.0)/3.0)*2.0), cwMat), westMat);
+	float bb3 = boxSDF(newPos3, vec3(1.1,1.1,1.1));
+	if(bb3 < .015)
+	{
+		
+		float power = 12.0;
+		dist3 = SDF_Mandlebulb(newPos3, power);
+	}
+	else
+	{
+		dist3 = bb3;
+	}
+
+	return un(dist1, un(dist2, dist3));
+
 }
 
 // Compute the normal of an implicit surface using the gradient method
@@ -256,12 +306,12 @@ void main() {
 	vec2 point_NDC = 2.0 * vec2(gl_FragCoord.x / u_resolution.x,
 								gl_FragCoord.y / u_resolution.y) - 1.0;
 
-	vec3 cameraPos = vec3(.000001, -10.0, .000001);
+	vec3 cameraPos = vec3(-3.5, 0, -3.5);
 	//vec3 cameraPos = vec3(1, 0, 1);
 	
 	// Circle the origin (0, 0, 0)
-	//cameraPos.x = sin(u_time) * 10.0;
-	//cameraPos.z = cos(u_time) * 10.0;
+	// cameraPos.x = sin(u_time) * 0.001;
+	// cameraPos.z = cos(u_time) * 0.001;
 	
 	float len = 15.0; // assume the reference point is at 0, 0, 0
 	
@@ -289,13 +339,14 @@ void main() {
 		vec3 normal = computeNormal( isectPos );
 		
 		// Lighting
-		vec3 baseMaterial = vec3(0.2);
+		vec3 baseMaterial = vec3(0.2, 0.1, 0.4);
+		vec3 trapColor = vec3(resColor.x+(sin((u_time+isectPos.x)/2.0)*0.2), resColor.y-(cos((u_time+isectPos.y)/8.0)*0.5), resColor.z+(cos((u_time-isectPos.z)/2.0)*0.8));
 		vec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;
 		vec3 sunPos = vec3(5.0, 5.0, 0.0);
 		float sunDot = clamp(dot( -normal, normalize(sunPos - isectPos) ), 0.0, 1.0);
 		
 		// Apply lambertian shading - for now
-		gl_FragColor = vec4( baseMaterial * sun * vec3(sunDot), 1 );
+		gl_FragColor = vec4( trapColor * sun * vec3(sunDot), 1 );
 		//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);
 	} else {
 		// Background color

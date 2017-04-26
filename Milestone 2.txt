@@ -1,0 +1,15 @@
+Milestone 2
+Tabatha Hickman and Joe Klinger
+
+Joe and Tabatha both spent some time playing around with materials this week. Joe implemented ambient occlusion and worked on making the actual geometry of the mandelbulb more visible (there were some issues with lambertian shading).
+
+Tabatha implemented some cool material shading based on IQ's orbit trapping as well as basic bounding boxes for the mandelbulbs to optimize the raymarcher. She also created a preliminary animation for the mandelbulbs.
+
+Remaining goals:
+- improve the overall scene, ie how to orient and place the mandelbulbs (open to suggestions)
+- improve the animation of color on the mandlebulbs
+- potentially add another type of fractal to the scene
+- experiment with other material types, even though what we have now looks better than what we have tried so far
+- music?
+- actually compress this thing to 4k????????
+- raymarcher needs to speed up somehow???????????????

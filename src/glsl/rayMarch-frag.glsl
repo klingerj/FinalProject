@@ -1,6 +1,6 @@
 
 #define MAX_GEOMETRY_COUNT 100
-#define SPHERE_TRACING false
+#define SPHERE_TRACING true
 #define T_MAX 20.0
 
 /* This is how I'm packing the data
@@ -219,7 +219,7 @@ float sceneMap2( vec3 pos ){
 	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 
 	float dist1;
-	vec3 newPos1 = transform(transform(pos + vec3(cos((u_time+4.0)/8.0)*4.0, 0, sin(u_time/7.0)*3.5), cwMat), northMat);
+	vec3 newPos1 = transform(transform(pos + vec3(cos((u_time+4.0)/8.0)*4.0, 0, sin(u_time/7.0)*3.5), cwMat), northMat);	
 	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
 	if(bb1 < .015)
 	{
@@ -261,6 +261,41 @@ float sceneMap2( vec3 pos ){
 
 	return un(dist1, un(dist2, dist3));
 
+	// float dist4;
+	// float bb4 = boxSDF(newPos4, vec3(1.2,1.2,1.2));
+	// if(bb4 < .015)
+	// {
+	// 	dist4 = SDF_Mandlebulb(newPos4, 16.0);
+	// }
+	// else
+	// {
+	// 	dist4 = bb4;
+	// }
+
+	// float dist5;
+	// float bb5 = boxSDF(newPos5, vec3(1.2,1.2,1.2));
+	// if(bb5 < .015)
+	// {
+	// 	dist5 = SDF_Mandlebulb(newPos5, 16.0);
+	// }
+	// else
+	// {
+	// 	dist5 = bb5;
+	// }
+	
+	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
+	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
+	//float man4 = SDF_Mandlebulb(newPos4, 16.0);
+	//float man5 = SDF_Mandlebulb(newPos5, 16.0);
+	//float man6 = SDF_Mandlebulb(newPos6, 24.0);
+	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
+	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
+	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
+	// return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
+	
+	// dist1 = SDF_Mandlebulb(newPos1, 12.0);
+	//return dist1;
+	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 }
 
 // Compute the normal of an implicit surface using the gradient method
@@ -294,7 +329,27 @@ vec2 raymarchScene( vec3 origin, vec3 direction ) {
 }
 
 
+float SpecHighlight( vec3 toCam, vec3 toLight, vec3 normal) {
+	float dot = dot(normalize(toCam + toLight), normal);
+	return max(dot * dot * dot * dot * dot * dot * dot * dot, 0.0);
+}
 
+// Presentation by IQ: http://www.iquilezles.org/www/material/nvscene2008/rwwtt.pdf
+float ComputeAO( vec3 pos, vec3 normal ) {
+	float tStep = 0.0025;
+	float t = 0.0;
+	float ao = 1.0;
+	float diff = 0.0;
+	float k = 72.0;
+	for(int i = 0; i < 5; i++) {
+		vec3 sample = pos + t * normal;
+		float dist = sceneMap2( sample );
+		diff += pow(0.5, float (i)) * (t - dist);
+		t += tStep;
+	}
+	ao -= clamp(k * diff, 0.0, 1.0);
+	return ao;
+}
 
 
 
@@ -307,13 +362,14 @@ void main() {
 								gl_FragCoord.y / u_resolution.y) - 1.0;
 
 	vec3 cameraPos = vec3(-3.5, 0, -3.5);
+	//vec3 cameraPos = vec3(1, -4, 2);
 	//vec3 cameraPos = vec3(1, 0, 1);
 	
 	// Circle the origin (0, 0, 0)
-	// cameraPos.x = sin(u_time) * 0.001;
-	// cameraPos.z = cos(u_time) * 0.001;
+	// cameraPos.x = sin(u_time) * 10.0;
+	// cameraPos.z = cos(u_time) * 10.0;
 	
-	float len = 15.0; // assume the reference point is at 0, 0, 0
+	float len = 10.0; // assume the reference point is at 0, 0, 0
 	
 	
 	// Compute camera's frame of reference
@@ -339,14 +395,33 @@ void main() {
 		vec3 normal = computeNormal( isectPos );
 		
 		// Lighting
-		vec3 baseMaterial = vec3(0.2, 0.1, 0.4);
+		vec3 baseMaterial = vec3(0.2, 0.2, 0.2);
 		vec3 trapColor = vec3(resColor.x+(sin((u_time+isectPos.x)/2.0)*0.2), resColor.y-(cos((u_time+isectPos.y)/8.0)*0.5), resColor.z+(cos((u_time-isectPos.z)/2.0)*0.8));
 		vec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;
 		vec3 sunPos = vec3(5.0, 5.0, 0.0);
-		float sunDot = clamp(dot( -normal, normalize(sunPos - isectPos) ), 0.0, 1.0);
+		
+		vec3 toSun = normalize(sunPos - isectPos);
+		
+		normal = -normal;
+		
+		// Visibility test
+		// vec2 shadowTest = raymarchScene( isectPos, toSun );
+		// float vis = 1.0;
+		
+		// if(shadowTest.y > 0.0) { // something is blocking this point
+		// 	vis = 0.0;
+		// }
+		
+		
+		
+		// Phong-ish shading for now
+		float spec = SpecHighlight( -look, toSun, normal);
+		
+		float sunDot = clamp(dot( normal, toSun ), 0.0, 1.0);
+		float ao = ComputeAO(isectPos, normal);
 		
 		// Apply lambertian shading - for now
-		gl_FragColor = vec4( trapColor * sun * vec3(sunDot), 1 );
+		gl_FragColor = /*vis * */ao * vec4(((1.0 - spec) * trapColor * baseMaterial * sun /** vec3(sunDot)*/ + spec * vec3(0.1)), 1);
 		//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);
 	} else {
 		// Background color

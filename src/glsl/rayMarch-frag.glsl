@@ -1,6 +1,6 @@
 
 #define MAX_GEOMETRY_COUNT 100
-#define SPHERE_TRACING false
+#define SPHERE_TRACING true
 #define T_MAX 40.0
 
 /* This is how I'm packing the data
@@ -136,7 +136,7 @@ float sceneMap2( vec3 pos ){
 	mat4 eastMat = mat4(1.0); 
 	eastMat[0][0] = cos(angle); eastMat[0][1] = sin(angle); eastMat[1][0] = -sin(angle); eastMat[1][1] = cos(angle); //rotating about z-axis, based on utime
 
-	vec3 newPos1 = transform(pos + vec3(0, 1.5, 0), cwMat);
+	vec3 newPos1 = pos; //transform(pos + vec3(0, 1.5, 0), cwMat);
 	vec3 newPos2 = transform(transform(pos + vec3(1.5, 0, 0), ccwMat), eastMat);
 	vec3 newPos3 = transform(transform(pos + vec3(-1.5, 0, 0), ccwMat), westMat);
 	vec3 newPos4 = transform(transform(pos + vec3(0, 0, 1.5), ccwMat), northMat);
@@ -147,6 +147,8 @@ float sceneMap2( vec3 pos ){
 	vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
 	
 	float dist1;
+	// dist1 = SDF_Mandlebulb(newPos1, 12.0);
+	
 	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
 	if(bb1 < .015)
 	{
@@ -156,7 +158,7 @@ float sceneMap2( vec3 pos ){
 	{
 		dist1 = bb1;
 	}
-
+/*
 	float dist2;
 	float bb2 = boxSDF(newPos2, vec3(1.2,1.2,1.2));
 	if(bb2 < .015)
@@ -200,7 +202,7 @@ float sceneMap2( vec3 pos ){
 	{
 		dist5 = bb5;
 	}
-
+	*/
 	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
 	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
 	//float man4 = SDF_Mandlebulb(newPos4, 16.0);
@@ -209,7 +211,8 @@ float sceneMap2( vec3 pos ){
 	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
 	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
 	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
-	return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
+	// return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
+	return dist1;
 	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 }
 
@@ -244,7 +247,27 @@ vec2 raymarchScene( vec3 origin, vec3 direction ) {
 }
 
 
+float SpecHighlight( vec3 toCam, vec3 toLight, vec3 normal) {
+	float dot = dot(normalize(toCam + toLight), normal);
+	return max(dot * dot * dot * dot * dot * dot * dot * dot, 0.0);
+}
 
+// Presentation by IQ: http://www.iquilezles.org/www/material/nvscene2008/rwwtt.pdf
+float ComputeAO( vec3 pos, vec3 normal ) {
+	float tStep = 0.0025;
+	float t = 0.0;
+	float ao = 1.0;
+	float diff = 0.0;
+	float k = 72.0;
+	for(int i = 0; i < 5; i++) {
+		vec3 sample = pos + t * normal;
+		float dist = sceneMap2( sample );
+		diff += pow(0.5, float (i)) * (t - dist);
+		t += tStep;
+	}
+	ao -= clamp(k * diff, 0.0, 1.0);
+	return ao;
+}
 
 
 
@@ -256,14 +279,14 @@ void main() {
 	vec2 point_NDC = 2.0 * vec2(gl_FragCoord.x / u_resolution.x,
 								gl_FragCoord.y / u_resolution.y) - 1.0;
 
-	vec3 cameraPos = vec3(.000001, -10.0, .000001);
+	vec3 cameraPos = vec3(1, -4, 2);
 	//vec3 cameraPos = vec3(1, 0, 1);
 	
 	// Circle the origin (0, 0, 0)
-	//cameraPos.x = sin(u_time) * 10.0;
-	//cameraPos.z = cos(u_time) * 10.0;
+	cameraPos.x = sin(u_time) * 10.0;
+	cameraPos.z = cos(u_time) * 10.0;
 	
-	float len = 15.0; // assume the reference point is at 0, 0, 0
+	float len = 10.0; // assume the reference point is at 0, 0, 0
 	
 	
 	// Compute camera's frame of reference
@@ -292,10 +315,29 @@ void main() {
 		vec3 baseMaterial = vec3(0.2);
 		vec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;
 		vec3 sunPos = vec3(5.0, 5.0, 0.0);
-		float sunDot = clamp(dot( -normal, normalize(sunPos - isectPos) ), 0.0, 1.0);
+		
+		vec3 toSun = normalize(sunPos - isectPos);
+		
+		normal = -normal;
+		
+		// Visibility test
+		// vec2 shadowTest = raymarchScene( isectPos, toSun );
+		// float vis = 1.0;
+		
+		// if(shadowTest.y > 0.0) { // something is blocking this point
+		// 	vis = 0.0;
+		// }
+		
+		
+		
+		// Phong-ish shading for now
+		float spec = SpecHighlight( -look, toSun, normal);
+		
+		float sunDot = clamp(dot( normal, toSun ), 0.0, 1.0);
+		float ao = ComputeAO(isectPos, normal);
 		
 		// Apply lambertian shading - for now
-		gl_FragColor = vec4( baseMaterial * sun * vec3(sunDot), 1 );
+		gl_FragColor = /*vis * */ao * vec4(((1.0 - spec) * baseMaterial * sun /** vec3(sunDot)*/ + spec * vec3(0.1)), 1);
 		//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);
 	} else {
 		// Background color

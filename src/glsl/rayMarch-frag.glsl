@@ -218,9 +218,11 @@ float sceneMap2( vec3 pos ){
 	//return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
 	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 
+	float t = u_time/16.0;
+
 	float dist1;
-	vec3 newPos1 = transform(transform(pos + vec3(cos((u_time+4.0)/8.0)*4.0, 0, sin(u_time/7.0)*3.5), cwMat), northMat);	
-	float bb1 = boxSDF(newPos1, vec3(1.1,1.1,1.1));
+	vec3 newPos1 = transform(transform(pos + vec3(cos((t+4.0)/8.0)*4.0, 0, sin(t/7.0)*3.5), cwMat), northMat);	
+	float bb1 = SDF_Sphere(newPos1, 1.1);//boxSDF(newPos1, vec3(1.1,1.1,1.1));
 	if(bb1 < .015)
 	{
 		float power = 12.0;
@@ -232,8 +234,8 @@ float sceneMap2( vec3 pos ){
 	}
 
 	float dist2;
-	vec3 newPos2 = transform(transform(pos + vec3(cos((u_time+50.0)/10.0)*2.0, 1, sin((u_time+30.0)/6.0)*2.5), ccwMat), eastMat);
-	float bb2 = boxSDF(newPos2, vec3(1.1,1.1,1.1));
+	vec3 newPos2 = transform(transform(pos + vec3(cos((t+50.0)/10.0)*2.0, 1, sin((t+30.0)/6.0)*2.5), ccwMat), eastMat);
+	float bb2 = SDF_Sphere(newPos2, 1.1);//boxSDF(newPos2, vec3(1.1,1.1,1.1));
 	if(bb2 < .015)
 	{
 		
@@ -246,8 +248,8 @@ float sceneMap2( vec3 pos ){
 	}
 
 	float dist3;
-	vec3 newPos3 = transform(transform(pos + vec3(sin((u_time)/16.0)*3.0, -1, cos((u_time+75.0)/3.0)*2.0), cwMat), westMat);
-	float bb3 = boxSDF(newPos3, vec3(1.1,1.1,1.1));
+	vec3 newPos3 = transform(transform(pos + vec3(sin((t)/16.0)*3.0, -1, cos((t+75.0)/3.0)*2.0), cwMat), westMat);
+	float bb3 = SDF_Sphere(newPos3, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
 	if(bb3 < .015)
 	{
 		
@@ -396,7 +398,7 @@ void main() {
 		
 		// Lighting
 		vec3 baseMaterial = vec3(0.2, 0.2, 0.2);
-		vec3 trapColor = vec3(resColor.x+(sin((u_time+isectPos.x)/2.0)*0.2), resColor.y-(cos((u_time+isectPos.y)/8.0)*0.5), resColor.z+(cos((u_time-isectPos.z)/2.0)*0.8));
+		vec3 trapColor = vec3(resColor.x-abs(sin((u_time)/2.0+isectPos.z)*0.2), resColor.y-(cos((u_time)/8.0+isectPos.y)*0.5), resColor.z+(cos((u_time)/2.0-isectPos.x)*0.8));
 		vec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;
 		vec3 sunPos = vec3(5.0, 5.0, 0.0);
 		

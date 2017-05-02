@@ -1,7 +1,7 @@
 
 #define MAX_GEOMETRY_COUNT 100
 #define SPHERE_TRACING true
-#define T_MAX 20.0
+#define T_MAX 8.0
 
 /* This is how I'm packing the data
 struct geometry_t {
@@ -101,10 +101,10 @@ float un(float d1, float d2)
     return min(d1,d2);
 }
 
-//returns transformed point based on rotation and translation matrix of shape
+// Returns transformed point based on rotation and translation matrix of shape
 vec3 transform(vec3 point, mat4 trans)
 {
-	//columns of the rotation matrix transpose
+	// Columns of the rotation matrix transpose
 	vec3 col1 = vec3(trans[0][0], trans[1][0], trans[2][0]);
 	vec3 col2 = vec3(trans[0][1], trans[1][1], trans[2][1]);
 	vec3 col3 = vec3(trans[0][2], trans[1][2], trans[2][2]);
@@ -123,9 +123,28 @@ float sceneMap( vec3 pos ) {
 	return SDF_Sphere( pos, 1.0 );
 }
 
+float mod(int num1, int num2)
+{
+	int div = num1/num2;
+	return float(num1 - div*num2);
+}
+
+int sceneNum()
+{
+	float x = u_time;
+	float cycle = 90.0;// * 20.0;
+	float t = (mod(x, cycle)/cycle) * 3.0;
+	if(t <= 1.0) { return 2; }
+	else if(t <= 2.0) { return 1; }
+	else { return 3; }
+}
+
 float sceneMap2( vec3 pos ){
 
-	float angle = u_time/(2.0*3.1415);
+	float t = u_time/4.0;
+	int sceneNumber = sceneNum();
+
+	float angle = 2.0*t/(2.0*3.1415);
 	mat4 cwMat = mat4(1.0); //transform for moving clockwise
 	cwMat[0][0] = cos(angle); cwMat[0][2] = -sin(angle); cwMat[2][0] = sin(angle); cwMat[2][2] = cos(angle); //rotating about y-axis, based on utime
 	mat4 ccwMat = mat4(1.0); //transform for moving counterclockwise
@@ -149,154 +168,105 @@ float sceneMap2( vec3 pos ){
 	// vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);
 	// vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);
 	// vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);
-	
-	// float dist1;
-	// float bb1 = boxSDF(newPos1, vec3(1.5,1.5,1.5));
-	// if(bb1 < .015)
-	// {
-	// 	float power = 10.0;//12.0 + abs(sin(u_time/4.0))*40.0;
-	// 	dist1 = SDF_Mandlebulb(newPos1, power);
-	// }
-	// else
-	// {
-	// 	dist1 = bb1;
-	// }
 
-	// float dist2;
-	// float bb2 = boxSDF(newPos2, vec3(1.1,1.1,1.1));
-	// if(bb2 < .015)
-	// {
-	// 	dist2 = SDF_Mandlebulb(newPos2, 16.0);
-	// }
-	// else
-	// {
-	// 	dist2 = bb2;
-	// }
-
-	// float dist3;
-	// float bb3 = boxSDF(newPos3, vec3(1.1,1.1,1.1));
-	// if(bb3 < .015)
-	// {
-	// 	dist3 = SDF_Mandlebulb(newPos3, 16.0);
-	// }
-	// else
-	// {
-	// 	dist3 = bb3;
-	// }
-
-	// float dist4;
-	// float bb4 = boxSDF(newPos4, vec3(1.1,1.1,1.1));
-	// if(bb4 < .015)
-	// {
-	// 	dist4 = SDF_Mandlebulb(newPos4, 16.0);
-	// }
-	// else
-	// {
-	// 	dist4 = bb4;
-	// }
-
-	// float dist5;
-	// float bb5 = boxSDF(newPos5, vec3(1.1,1.1,1.1));
-	// if(bb5 < .015)
-	// {
-	// 	dist5 = SDF_Mandlebulb(newPos5, 16.0);
-	// }
-	// else
-	// {
-	// 	dist5 = bb5;
-	// }
-
-	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
-	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
-	//float man4 = SDF_Mandlebulb(newPos4, 16.0);
-	//float man5 = SDF_Mandlebulb(newPos5, 16.0);
-	//float man6 = SDF_Mandlebulb(newPos6, 24.0);
-	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
-	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
-	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
-	
-	//return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
-	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
-
-	float t = u_time/16.0;
-
-	float dist1;
-	vec3 newPos1 = transform(transform(pos + vec3(cos((t+4.0)/8.0)*4.0, 0, sin(t/7.0)*3.5), cwMat), northMat);	
-	float bb1 = SDF_Sphere(newPos1, 1.1);//boxSDF(newPos1, vec3(1.1,1.1,1.1));
-	if(bb1 < .015)
+	if(sceneNumber == 1)
 	{
-		float power = 12.0;
-		dist1 = SDF_Mandlebulb(newPos1, power);
-	}
-	else
-	{
-		dist1 = bb1;
-	}
+		//SCENE 01------------------------------------------------------------
+		float dist1;
+		//vec3 newPos1 = transform(transform(pos + vec3(cos((t+4.0)/8.0)*4.0, 0, sin(t/7.0)*3.5), cwMat), northMat);
+		vec3 newPos1 = transform(transform(pos + vec3(sin(t)*3.25, sin(t)*2.0, cos(t)*3.25), cwMat), northMat);	
+		float bb1 = SDF_Sphere(newPos1, 1.1);//boxSDF(newPos1, vec3(1.1,1.1,1.1));
+		if(bb1 < .015)
+		{
+			float power = 10.0;
+			dist1 = SDF_Mandlebulb(newPos1, power);
+		}	
+		else
+		{
+			dist1 = bb1;
+		}
 
-	float dist2;
-	vec3 newPos2 = transform(transform(pos + vec3(cos((t+50.0)/10.0)*2.0, 1, sin((t+30.0)/6.0)*2.5), ccwMat), eastMat);
-	float bb2 = SDF_Sphere(newPos2, 1.1);//boxSDF(newPos2, vec3(1.1,1.1,1.1));
-	if(bb2 < .015)
-	{
+		float dist2;
+		//vec3 newPos2 = transform(transform(pos + vec3(cos((t+50.0)/10.0)*2.0, 1, sin((t+30.0)/6.0)*2.5), ccwMat), eastMat);
+		vec3 newPos2 = transform(transform(pos + vec3(sin(t + 30.0)*3.25, cos(t + 8.0)*2.0, sin(t)*-1.5), ccwMat), eastMat);	
+		float bb2 = SDF_Sphere(newPos2, 1.1);//boxSDF(newPos2, vec3(1.1,1.1,1.1));
+		if(bb2 < .015)
+		{		
+			float power = 10.0;
+			dist2 = SDF_Mandlebulb(newPos2, power);
+		}
+		else
+		{
+			dist2 = bb2;
+		}
+
+		float dist3;
+		// vec3 newPos3 = transform(transform(pos + vec3(sin((t)/16.0)*3.0, -1, cos((t+75.0)/3.0)*2.0), cwMat), westMat);
+		vec3 newPos3 = transform(transform(pos + vec3(cos(t+6.0)*3.25, -0.5*sin(t) + -0.5*cos(1.0), sin(t+12.0)*3.25), cwMat), westMat);	
+		float bb3 = SDF_Sphere(newPos3, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
+		if(bb3 < .015)
+		{
 		
-		float power = 12.0;
-		dist2 = SDF_Mandlebulb(newPos2, power);
+			float power = 10.0;
+			dist3 = SDF_Mandlebulb(newPos3, power);
+		}
+		else
+		{
+			dist3 = bb3;
+		}
+
+		return un(dist1, un(dist2, dist3));
 	}
-	else
+	else if(sceneNumber == 2)
 	{
-		dist2 = bb2;
-	}
+		//SCENE 02------------------------------------------------------------
+		float dist4;
+		mat4 rotateX = mat4(1.0); rotateX[1][1] = 0.0; rotateX[1][2] = 1.0; rotateX[2][1] = -1.0; rotateX[2][2] = 0.0; //rotate 90 degress about x-axis
+		float angY = 45.0*3.1415/180.0;
+		mat4 rotateY = mat4(1.0); rotateY[0][0] = cos(angY); rotateY[0][2] = -sin(angY); rotateY[2][0] = sin(angY); rotateY[2][2] = cos(angY); //rotate 45 degrees about y-axis
+		float angZ = (2.0*u_time)*3.1415/180.0;
+		mat4 rotateZ = mat4(1.0); rotateZ[0][0] = cos(angZ); rotateZ[0][1] = sin(angZ); rotateZ[1][0] = -sin(angZ); rotateZ[1][1] = cos(angZ); //spin about z-axis
+		float displace = mod(u_time, 90.0)/30.0*3.0; 
+		vec3 newPos4 = transform(transform(transform(pos + vec3(displace, 0, displace), rotateY), rotateZ), rotateX);	
+		float bb4 = SDF_Sphere(newPos4, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
+		if(bb4 < .015)
+		{	
+			float power = 10.0;
+			dist4 = SDF_Mandlebulb(newPos4, power);
+		}
+		else
+		{
+			dist4 = bb4;
+		}
 
-	float dist3;
-	vec3 newPos3 = transform(transform(pos + vec3(sin((t)/16.0)*3.0, -1, cos((t+75.0)/3.0)*2.0), cwMat), westMat);
-	float bb3 = SDF_Sphere(newPos3, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
-	if(bb3 < .015)
+		return dist4;
+	}
+	else 
 	{
-		
-		float power = 12.0;
-		dist3 = SDF_Mandlebulb(newPos3, power);
+		//SCENE 03------------------------------------------------------------
+		float dist5;
+		mat4 rotateX2 = mat4(1.0); rotateX2[1][1] = 0.0; rotateX2[1][2] = 1.0; rotateX2[2][1] = -1.0; rotateX2[2][2] = 0.0; //rotate 90 degress about x-axis
+		float angY2 = -45.0*3.1415/180.0;
+		mat4 rotateY2 = mat4(1.0); rotateY2[0][0] = cos(angY2); rotateY2[0][2] = -sin(angY2); rotateY2[2][0] = sin(angY2); rotateY2[2][2] = cos(angY2); //rotate 45 degrees about y-axis
+		float angZ2 = (2.0*u_time)*3.1415/180.0;
+		mat4 rotateZ2 = mat4(1.0); rotateZ2[0][0] = cos(angZ2); rotateZ2[0][2] = -sin(angZ2); rotateZ2[2][0] = sin(angZ2); rotateZ2[2][2] = cos(angZ2); //spin about y-axis
+		vec3 newPos5 = transform(transform(transform(pos + vec3(3.0, -1.0, 3.0), rotateY2), rotateX2), rotateZ2);	
+		float bb5 = SDF_Sphere(newPos5, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
+		if(bb5 < .015)
+		{	
+			float power = 10.0;
+			dist5 = SDF_Mandlebulb(newPos5, power);
+		}
+		else
+		{
+			dist5 = bb5;
+		}
+
+		return dist5;
 	}
-	else
-	{
-		dist3 = bb3;
-	}
-
-	return un(dist1, un(dist2, dist3));
-
-	// float dist4;
-	// float bb4 = boxSDF(newPos4, vec3(1.2,1.2,1.2));
-	// if(bb4 < .015)
-	// {
-	// 	dist4 = SDF_Mandlebulb(newPos4, 16.0);
-	// }
-	// else
-	// {
-	// 	dist4 = bb4;
-	// }
-
-	// float dist5;
-	// float bb5 = boxSDF(newPos5, vec3(1.2,1.2,1.2));
-	// if(bb5 < .015)
-	// {
-	// 	dist5 = SDF_Mandlebulb(newPos5, 16.0);
-	// }
-	// else
-	// {
-	// 	dist5 = bb5;
-	// }
-	
-	//float man2 = SDF_Mandlebulb(newPos2, 16.0);
-	//float man3 = SDF_Mandlebulb(newPos3, 16.0);
-	//float man4 = SDF_Mandlebulb(newPos4, 16.0);
-	//float man5 = SDF_Mandlebulb(newPos5, 16.0);
-	//float man6 = SDF_Mandlebulb(newPos6, 24.0);
-	//float man7 = SDF_Mandlebulb(newPos7, 24.0);
-	//float man8 = SDF_Mandlebulb(newPos8, 24.0);
-	//float man9 = SDF_Mandlebulb(newPos9, 24.0);
-	// return un(dist1, un(dist2, un(dist3, un(dist4, dist5))));
 	
 	// dist1 = SDF_Mandlebulb(newPos1, 12.0);
-	//return dist1;
+	//return dist3;
 	//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));
 }
 
@@ -354,6 +324,37 @@ float ComputeAO( vec3 pos, vec3 normal ) {
 }
 
 
+vec3 backgroundColor()
+{
+	int sn = sceneNum();
+	float darken; 
+	if(sn == 1)
+	{
+		darken = abs(cos(sin(8.0*f_uv.x*sin(u_time/12.0) + 8.0) + f_uv.y*2.0));
+		darken *= abs(sin(cos(4.0*f_uv.y*2.0*sin(u_time/12.0) + 3.0) + f_uv.x*5.0));
+	}
+	else if(sn == 2)
+	{
+		darken = cos(48.0*length(f_uv - vec2(0.5, 0.5)) + sin(80.0*f_uv.x*-f_uv.y) + cos(50.0*-f_uv.x*f_uv.y) + sin(u_time));
+	}
+	else
+	{
+		darken = cos(length(f_uv - vec2(0.5, 0.5)));
+		darken += (0.5 - length(vec2(0.25*f_uv.x + 0.25, f_uv.y) - vec2(0.5, 0.0)))/0.5;
+	}
+	
+	darken = clamp(darken, 0.2, 1.0);
+
+	vec3 a = vec3(0.5, 0.5, 0.5);
+	vec3 b = vec3(0.5, 0.5, 0.5);
+	vec3 c = vec3(2.0, 1.0, 1.0);
+	vec3 d = vec3(0.5, 0.2, 0.25);
+	float t = abs(sin(u_time/12.0));
+	vec3 color = a + b*cos(6.28*(c*t + d));
+
+	return darken*color;
+}
+
 
 void main() {
 	
@@ -397,8 +398,24 @@ void main() {
 		vec3 normal = computeNormal( isectPos );
 		
 		// Lighting
-		vec3 baseMaterial = vec3(0.2, 0.2, 0.2);
-		vec3 trapColor = vec3(resColor.x-abs(sin((u_time)/2.0+isectPos.z)*0.2), resColor.y-(cos((u_time)/8.0+isectPos.y)*0.5), resColor.z+(cos((u_time)/2.0-isectPos.x)*0.8));
+		vec3 baseMaterial = vec3(0.1, 0.2, 0.2);
+		vec3 trapColor;
+		int sn = sceneNum();
+		if(sn == 1)
+		{
+			trapColor = vec3(
+				resColor.x-abs(sin((u_time)/2.0+isectPos.z)*0.8), 
+				resColor.y-(cos((u_time)/8.0+isectPos.y)*0.5), 
+				resColor.z+(cos((u_time)/2.0-isectPos.x)*0.2));
+		}
+		else if(sn == 2)
+		{
+			trapColor = vec3(resColor) + vec3(0.4);
+		}
+		else
+		{
+			trapColor = vec3(0.0, resColor.y+0.4, resColor.z+0.4);
+		}
 		vec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;
 		vec3 sunPos = vec3(5.0, 5.0, 0.0);
 		
@@ -423,10 +440,12 @@ void main() {
 		float ao = ComputeAO(isectPos, normal);
 		
 		// Apply lambertian shading - for now
+		
+		//gl_FragColor = ao*vec4(baseMaterial, 1.0);
 		gl_FragColor = /*vis * */ao * vec4(((1.0 - spec) * trapColor * baseMaterial * sun /** vec3(sunDot)*/ + spec * vec3(0.1)), 1);
 		//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);
 	} else {
 		// Background color
-		gl_FragColor = vec4(0.5, 0.5, 0.5, 1);
+		gl_FragColor = vec4(backgroundColor(), 1);
 	}
 }

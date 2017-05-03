@@ -7,7 +7,7 @@
 
 #define SPHERE_TRACING true
 #define T_MAX 12.0
-// #define MOTION_BLUR true
+#define MOTION_BLUR true
 
 varying vec2 f_uv;
 

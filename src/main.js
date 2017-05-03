@@ -8,6 +8,14 @@ import Stats from 'stats-js'
 import ProxyGeometry, {ProxyMaterial} from './proxy_geometry'
 import RayMarcher from './rayMarching'
 
+//Audio and Audio Analysis variables
+ 
+//Create an AudioListener and add it to the camera
+var listener = new THREE.AudioListener();
+ 
+// create a global audio source
+var sound = new THREE.PositionalAudio( listener );
+
 var BoxGeometry = new THREE.BoxGeometry(1, 1, 1);
 var SphereGeometry = new THREE.SphereGeometry(1, 32, 32);
 var ConeGeometry = new THREE.ConeGeometry(1, 1);
@@ -37,19 +45,30 @@ window.addEventListener('load', function() {
     controls.zoomSpeed = 1.0;
     controls.panSpeed = 2.0;
 
+
+    var audioLoader = new THREE.AudioLoader();
+ 
+    //Load a sound and set it as the Audio object's buffer
+    audioLoader.load( 'Dubstep_Sub-Mix_2016.mp3', function( buffer ) {
+        sound.setBuffer( buffer );
+        sound.setLoop(true);
+        sound.setVolume(1.0);
+        sound.play();
+    });  
+
     window.addEventListener('resize', function() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    var gui = new DAT.GUI();
+    // var gui = new DAT.GUI();
 
     var options = {
         strategy: 'Ray Marching'
     }
 
-    gui.add(options, 'strategy', ['Proxy Geometry', 'Ray Marching']);
+    // gui.add(options, 'strategy', ['Proxy Geometry', 'Ray Marching']);
 
     scene.add(new THREE.AxisHelper(20));
     scene.add(new THREE.DirectionalLight(0xffffff, 1));

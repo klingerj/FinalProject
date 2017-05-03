@@ -1,7 +1,7 @@
 
 #define MAX_GEOMETRY_COUNT 100
 #define SPHERE_TRACING true
-#define T_MAX 8.0
+#define T_MAX 10.0
 
 /* This is how I'm packing the data
 struct geometry_t {
@@ -132,10 +132,11 @@ float mod(int num1, int num2)
 int sceneNum()
 {
 	float x = u_time;
-	float cycle = 90.0;// * 20.0;
-	float t = (mod(x, cycle)/cycle) * 3.0;
-	if(t <= 1.0) { return 2; }
-	else if(t <= 2.0) { return 1; }
+	float cycle = 124.0;
+	float fps = 6.0;
+	float t = mod(x, cycle);
+	if(t <= 42.0) { return 2; }
+	else if(t <= 80.0) { return 1; }
 	else { return 3; }
 }
 
@@ -202,7 +203,7 @@ float sceneMap2( vec3 pos ){
 
 		float dist3;
 		// vec3 newPos3 = transform(transform(pos + vec3(sin((t)/16.0)*3.0, -1, cos((t+75.0)/3.0)*2.0), cwMat), westMat);
-		vec3 newPos3 = transform(transform(pos + vec3(cos(t+6.0)*3.25, -0.5*sin(t) + -0.5*cos(1.0), sin(t+12.0)*3.25), cwMat), westMat);	
+		vec3 newPos3 = transform(transform(pos + vec3(cos(t+6.0)*3.25, -1.0*sin(t) + -0.5*cos(1.0), sin(t+12.0)*3.25), cwMat), westMat);	
 		float bb3 = SDF_Sphere(newPos3, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
 		if(bb3 < .015)
 		{
@@ -226,7 +227,7 @@ float sceneMap2( vec3 pos ){
 		mat4 rotateY = mat4(1.0); rotateY[0][0] = cos(angY); rotateY[0][2] = -sin(angY); rotateY[2][0] = sin(angY); rotateY[2][2] = cos(angY); //rotate 45 degrees about y-axis
 		float angZ = (2.0*u_time)*3.1415/180.0;
 		mat4 rotateZ = mat4(1.0); rotateZ[0][0] = cos(angZ); rotateZ[0][1] = sin(angZ); rotateZ[1][0] = -sin(angZ); rotateZ[1][1] = cos(angZ); //spin about z-axis
-		float displace = mod(u_time, 90.0)/30.0*3.0; 
+		float displace = pow(mod(u_time, 124.0)/(42.0), log(0.2) / log(0.5)) * 3.0; 
 		vec3 newPos4 = transform(transform(transform(pos + vec3(displace, 0, displace), rotateY), rotateZ), rotateX);	
 		float bb4 = SDF_Sphere(newPos4, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));
 		if(bb4 < .015)

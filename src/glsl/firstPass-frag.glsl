@@ -314,7 +314,7 @@ vec3 raymarchScene( vec3 origin, vec3 direction ) {
 	float t = 0.01;
 	vec3 result = vec3(0.0);
 	
-	for(int i = 1; i <= 250; i++) {
+	for(int i = 1; i <= 750; i++) {
 		float dist = sceneMap(origin + t * direction);
 		
 		if(abs(dist) < 0.0002) {
@@ -369,11 +369,11 @@ void main() {
 		trapColor.r *= 0.01;
 		
 		// Two methods to compute AO:
-		float ao = ComputeAO(isectPos, normal);
-		// float fakeAO = 1.0 - clamp(isect.y, 0.0, 0.9);
+		// float ao = ComputeAO(isectPos, normal);
+		float fakeAO = 1.0 - clamp(isect.y, 0.0, 0.9);
 		
-		gl_FragColor = ao * vec4(trapColor, 1);
-		// gl_FragColor = fakeAO * vec4(trapColor, 1);
+		// gl_FragColor = ao * vec4(trapColor, 1);
+		gl_FragColor = fakeAO * vec4(trapColor, 1);
 	} else {
 		gl_FragColor = vec4(backgroundColor(), 1);
 	}

@@ -1,0 +1,18 @@
+float angle = 2.0*t/(2.0*3.1415);
+
+var cwMat = new THREE.Matrix4(); //transform for moving clockwise
+cwMat.makeRotationY(angle); //rotating about y-axis, based on utime
+
+var ccwMat = new THREE.Matrix4(); //transform for moving counterclockwise
+ccwMat.makeRotationY(-angle); //rotating about y-axis, based on utime
+
+var northMat = new THREE.Matrix4();
+northMat.makeRotationX(angle); //rotating about x-axis, based on utime
+
+var southMat = new THREE.Matrix4();
+southMat.makeRotationX(-angle); //rotating about x-axis, based on utime
+
+var westMat = new THREE.Matrix4();
+westMat.makeRotationZ(-angle); //rotating about z-axis, based on utime
+
+var eastMat = new THREE.Matrix4();

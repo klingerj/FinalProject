@@ -64,10 +64,10 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	__webpack_require__(16);
+	__webpack_require__(18);
 	
 	var THREE = __webpack_require__(6);
-	var OrbitControls = __webpack_require__(17)(THREE);
+	var OrbitControls = __webpack_require__(19)(THREE);
 	
 	//Audio and Audio Analysis variables
 	
@@ -48016,15 +48016,14 @@
 	    value: true
 	});
 	exports.default = RayMarcher;
-	
-	var _proxy_geometry = __webpack_require__(5);
-	
 	var THREE = __webpack_require__(6);
 	var EffectComposer = __webpack_require__(8)(THREE);
 	
 	function RayMarcher(renderer, scene, camera) {
-	    var composer = new EffectComposer(renderer);
-	    var shaderPass = new EffectComposer.ShaderPass({
+	
+	    var target1 = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+	    var composer1 = new EffectComposer(renderer, target1);
+	    var shaderPass1 = new EffectComposer.ShaderPass({
 	        uniforms: {
 	            u_time: {
 	                type: 'f',
@@ -48041,20 +48040,156 @@
 	            u_aspect: {
 	                type: 'f',
 	                value: camera.aspect
+	            },
+	            u_cwMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_ccwMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_northMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_southMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_westMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_eastMat: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateX1: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateY1: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateZ1: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateX2: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateY2: {
+	                type: 'm4v',
+	                value: null
+	            },
+	            u_rotateZ2: {
+	                type: 'm4v',
+	                value: null
 	            }
 	        },
 	        vertexShader: __webpack_require__(14),
 	        fragmentShader: __webpack_require__(15)
-	
 	    });
-	    shaderPass.renderToScreen = true;
-	    composer.addPass(shaderPass);
+	
+	    var composer2 = new EffectComposer(renderer);
+	    var shaderPass2 = new EffectComposer.ShaderPass({
+	        uniforms: {
+	            u_firstPass: {
+	                type: 't',
+	                value: null
+	            },
+	            u_previousFrame: {
+	                type: 't',
+	                value: null
+	            }
+	        },
+	        vertexShader: __webpack_require__(14),
+	        fragmentShader: __webpack_require__(16)
+	    });
+	    shaderPass2.renderToScreen = true;
+	    shaderPass2.material.uniforms.u_firstPass.value = composer1.writeBuffer.texture;
+	
+	    var target3 = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+	    var composer3 = new EffectComposer(renderer, target3);
+	    var shaderPass3 = new EffectComposer.ShaderPass({
+	        uniforms: {
+	            u_input: {
+	                type: 't',
+	                value: null
+	            }
+	        },
+	        vertexShader: __webpack_require__(14),
+	        fragmentShader: __webpack_require__(17)
+	    });
+	    shaderPass2.material.uniforms.u_previousFrame.value = composer3.writeBuffer.texture;
+	    shaderPass3.material.uniforms.u_input.value = composer1.writeBuffer.texture;
+	
+	    composer1.addPass(shaderPass1);
+	    composer2.addPass(shaderPass2);
+	    composer3.addPass(shaderPass3);
 	
 	    return {
 	        render: function render(buffer, clock) {
-	            shaderPass.uniforms["u_time"].value = clock.getElapsedTime();
-	            composer.render();
-	            // console.log(composer);
+	            shaderPass1.uniforms["u_time"].value = clock.getElapsedTime();
+	
+	            // Mandelbulb transformation uniforms
+	            var angle = clock.getElapsedTime() / (4.0 * 3.1415);
+	
+	            var cwMat = new THREE.Matrix4();
+	            cwMat.makeRotationY(angle);
+	
+	            var ccwMat = new THREE.Matrix4();
+	            ccwMat.makeRotationY(-angle);
+	
+	            var northMat = new THREE.Matrix4();
+	            northMat.makeRotationX(angle);
+	
+	            var southMat = new THREE.Matrix4();
+	            southMat.makeRotationX(-angle);
+	
+	            var eastMat = new THREE.Matrix4();
+	            eastMat.makeRotationZ(angle);
+	
+	            var westMat = new THREE.Matrix4();
+	            westMat.makeRotationZ(-angle);
+	
+	            var rotateX1 = new THREE.Matrix4();
+	            rotateX1.makeRotationX(3.1415 / 2.0);
+	
+	            var rotateY1 = new THREE.Matrix4();
+	            rotateY1.makeRotationY(45.0 * 3.1415 / 180.0);
+	
+	            var rotateZ1 = new THREE.Matrix4();
+	            rotateZ1.makeRotationZ(2.0 * clock.getElapsedTime() * 3.1415 / 180.0);
+	
+	            var rotateX2 = new THREE.Matrix4();
+	            rotateX2.makeRotationX(3.1415 / 2.0);
+	
+	            var rotateY2 = new THREE.Matrix4();
+	            rotateY2.makeRotationY(-45.0 * 3.1415 / 180.0);
+	
+	            var rotateZ2 = new THREE.Matrix4();
+	            rotateZ2.makeRotationY(2.0 * clock.getElapsedTime() * 3.1415 / 180.0);
+	
+	            shaderPass1.uniforms["u_cwMat"].value = cwMat;
+	            shaderPass1.uniforms["u_ccwMat"].value = ccwMat;
+	            shaderPass1.uniforms["u_northMat"].value = northMat;
+	            shaderPass1.uniforms["u_southMat"].value = southMat;
+	            shaderPass1.uniforms["u_westMat"].value = westMat;
+	            shaderPass1.uniforms["u_eastMat"].value = eastMat;
+	            shaderPass1.uniforms["u_rotateX1"].value = rotateX1;
+	            shaderPass1.uniforms["u_rotateY1"].value = rotateY1;
+	            shaderPass1.uniforms["u_rotateZ1"].value = rotateZ1;
+	            shaderPass1.uniforms["u_rotateX2"].value = rotateX2;
+	            shaderPass1.uniforms["u_rotateY2"].value = rotateY2;
+	            shaderPass1.uniforms["u_rotateZ2"].value = rotateZ2;
+	
+	            composer1.render();
+	            composer2.render();
+	            composer3.render();
 	        }
 	    };
 	}
@@ -48488,16 +48623,28 @@
 /* 15 */
 /***/ (function(module, exports) {
 
-	module.exports = "\r\n#define MAX_GEOMETRY_COUNT 100\r\n#define SPHERE_TRACING true\r\n#define T_MAX 10.0\r\n\r\n/* This is how I'm packing the data\r\nstruct geometry_t {\r\n    vec3 position;\r\n    float type;\r\n};\r\n*/\r\n// uniform vec4 u_buffer[MAX_GEOMETRY_COUNT];\r\n// uniform int u_count;\r\n\r\nvarying vec2 f_uv;\r\n\r\nuniform float u_time;\r\nuniform vec2 u_resolution;\r\nuniform float u_fovy;\r\nuniform float u_aspect;\r\n\r\nvec4 resColor;\r\n\r\n/***** Geometry SDF Functions\r\nhttp://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm\r\n\t\t\t\t\t\t\t  *****/\r\n\r\nfloat SDF_Sphere( vec3 pos, float radius ) {\r\n\treturn length(pos) - radius;\r\n}\r\n\r\n//diagonal is the vector from the center of the box to the first quadrant corner\r\nfloat boxSDF(vec3 point, vec3 diagonal) {\r\n\tvec3 d = abs(point) - diagonal;\r\n  \treturn min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));\r\n}\r\n\r\nfloat SDF_Mandlebulb( vec3 p , float manPower)\r\n{\r\n\tvec3 w = p;\r\n    float m = dot(w,w);\r\n\r\n    vec4 trap = vec4(abs(w),m);\r\n    float dz = 1.0;\r\n    \r\n    \r\n    for( int i=0; i<4; i++ )\r\n    {\r\n#if 1\r\n        float m2 = m*m;\r\n        float m4 = m2*m2;\r\n        dz = manPower*sqrt(m4*m2*m)*dz + 1.0;\r\n\r\n        float x = w.x; float x2 = x*x; float x4 = x2*x2;\r\n        float y = w.y; float y2 = y*y; float y4 = y2*y2;\r\n        float z = w.z; float z2 = z*z; float z4 = z2*z2;\r\n\r\n        float k3 = x2 + z2;\r\n        float k2 = inversesqrt( k3*k3*k3*k3*k3*k3*k3 );\r\n        float k1 = x4 + y4 + z4 - 6.0*y2*z2 - 6.0*x2*y2 + 2.0*z2*x2;\r\n        float k4 = x2 - y2 + z2;\r\n\r\n        w.x = p.x +  64.0*x*y*z*(x2-z2)*k4*(x4-6.0*x2*z2+z4)*k1*k2;\r\n        w.y = p.y + -16.0*y2*k3*k4*k4 + k1*k1;\r\n        w.z = p.z +  -8.0*y*k4*(x4*x4 - 28.0*x4*x2*z2 + 70.0*x4*z4 - 28.0*x2*z2*z4 + z4*z4)*k1*k2;\r\n#else\r\n        dz = 8.0*pow(m,3.5)*dz + 1.0;\r\n        \r\n        float r = length(w);\r\n        float b = 8.0*acos( clamp(w.y/r, -1.0, 1.0));\r\n        float a = 8.0*atan( w.x, w.z );\r\n        w = p + pow(r,8.0) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );\r\n#endif        \r\n        \r\n        trap = min( trap, vec4(abs(w),m) );\r\n\r\n        m = dot(w,w);\r\n        if( m > 4.0 )\r\n            break;\r\n    }\r\n    trap.x = m;\r\n    resColor = trap;\r\n\r\n    return 0.25*log(m)*sqrt(m)/dz;\r\n}\r\n\r\n//Operators:\r\n\r\nfloat intersection(float d1, float d2)\r\n{\r\n    return max(d1,d2);\r\n}\r\n\r\nfloat subtraction( float d1, float d2 )\r\n{\r\n    return max(-d1,d2);\r\n}\r\n\r\nfloat un(float d1, float d2)\r\n{\r\n    return min(d1,d2);\r\n}\r\n\r\n// Returns transformed point based on rotation and translation matrix of shape\r\nvec3 transform(vec3 point, mat4 trans)\r\n{\r\n\t// Columns of the rotation matrix transpose\r\n\tvec3 col1 = vec3(trans[0][0], trans[1][0], trans[2][0]);\r\n\tvec3 col2 = vec3(trans[0][1], trans[1][1], trans[2][1]);\r\n\tvec3 col3 = vec3(trans[0][2], trans[1][2], trans[2][2]);\r\n\r\n\tmat3 rotTranspose = mat3(col1, col2, col3);\r\n\r\n\tvec3 col4 = -1.0*rotTranspose*vec3(trans[3]);\r\n\r\n\tmat4 newTrans = mat4(vec4(col1, 0.0), vec4(col2, 0.0), vec4(col3, 0.0), vec4(col4, 1.0));\r\n\r\n\treturn vec3(newTrans * vec4(point, 1.0));\r\n}\r\n\r\n// Return the distance of the closest object in the scene\r\nfloat sceneMap( vec3 pos ) {\r\n\treturn SDF_Sphere( pos, 1.0 );\r\n}\r\n\r\nfloat mod(int num1, int num2)\r\n{\r\n\tint div = num1/num2;\r\n\treturn float(num1 - div*num2);\r\n}\r\n\r\nint sceneNum()\r\n{\r\n\tfloat x = u_time;\r\n\tfloat cycle = 124.0;\r\n\tfloat fps = 6.0;\r\n\tfloat t = mod(x, cycle);\r\n\tif(t <= 42.0) { return 2; }\r\n\telse if(t <= 80.0) { return 1; }\r\n\telse { return 3; }\r\n}\r\n\r\nfloat sceneMap2( vec3 pos ){\r\n\r\n\tfloat t = u_time/4.0;\r\n\tint sceneNumber = sceneNum();\r\n\r\n\tfloat angle = 2.0*t/(2.0*3.1415);\r\n\tmat4 cwMat = mat4(1.0); //transform for moving clockwise\r\n\tcwMat[0][0] = cos(angle); cwMat[0][2] = -sin(angle); cwMat[2][0] = sin(angle); cwMat[2][2] = cos(angle); //rotating about y-axis, based on utime\r\n\tmat4 ccwMat = mat4(1.0); //transform for moving counterclockwise\r\n\tccwMat[0][0] = cos(-angle); ccwMat[0][2] = -sin(-angle); ccwMat[2][0] = sin(-angle); ccwMat[2][2] = cos(-angle); //rotating about y-axis, based on utime\r\n\r\n\tmat4 northMat = mat4(1.0); \r\n\tnorthMat[1][1] = cos(angle); northMat[1][2] = sin(angle); northMat[2][1] = -sin(angle); northMat[2][2] = cos(angle); //rotating about x-axis, based on utime\r\n\tmat4 southMat = mat4(1.0); \r\n\tsouthMat[1][1] = cos(-angle); southMat[1][2] = sin(-angle); southMat[2][1] = -sin(-angle); southMat[2][2] = cos(-angle); //rotating about x-axis, based on utime\r\n\tmat4 westMat = mat4(1.0); \r\n\twestMat[0][0] = cos(-angle); westMat[0][1] = sin(-angle); westMat[1][0] = -sin(-angle); westMat[1][1] = cos(-angle); //rotating about z-axis, based on utime\r\n\tmat4 eastMat = mat4(1.0); \r\n\teastMat[0][0] = cos(angle); eastMat[0][1] = sin(angle); eastMat[1][0] = -sin(angle); eastMat[1][1] = cos(angle); //rotating about z-axis, based on utime\r\n\r\n\t// vec3 newPos1 = transform(pos + vec3(0, 1.5, 0), cwMat);\r\n\t// vec3 newPos2 = transform(transform(pos + vec3(1.5, 0, 0), ccwMat), eastMat);\r\n\t// vec3 newPos3 = transform(transform(pos + vec3(-1.5, 0, 0), ccwMat), westMat);\r\n\t// vec3 newPos4 = transform(transform(pos + vec3(0, 0, 1.5), ccwMat), northMat);\r\n\t// vec3 newPos5 = transform(transform(pos + vec3(0, 0, -1.5), ccwMat), southMat);\r\n\t// vec3 newPos6 = transform(pos + vec3(2, -1.5, 2), cwMat);\r\n\t// vec3 newPos7 = transform(pos + vec3(-2, -1.5, -2), cwMat);\r\n\t// vec3 newPos8 = transform(pos + vec3(-2, -1.5, 2), cwMat);\r\n\t// vec3 newPos9 = transform(pos + vec3(2, -1.5, -2), cwMat);\r\n\r\n\tif(sceneNumber == 1)\r\n\t{\r\n\t\t//SCENE 01------------------------------------------------------------\r\n\t\tfloat dist1;\r\n\t\t//vec3 newPos1 = transform(transform(pos + vec3(cos((t+4.0)/8.0)*4.0, 0, sin(t/7.0)*3.5), cwMat), northMat);\r\n\t\tvec3 newPos1 = transform(transform(pos + vec3(sin(t)*3.25, sin(t)*2.0, cos(t)*3.25), cwMat), northMat);\t\r\n\t\tfloat bb1 = SDF_Sphere(newPos1, 1.1);//boxSDF(newPos1, vec3(1.1,1.1,1.1));\r\n\t\tif(bb1 < .015)\r\n\t\t{\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist1 = SDF_Mandlebulb(newPos1, power);\r\n\t\t}\t\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist1 = bb1;\r\n\t\t}\r\n\r\n\t\tfloat dist2;\r\n\t\t//vec3 newPos2 = transform(transform(pos + vec3(cos((t+50.0)/10.0)*2.0, 1, sin((t+30.0)/6.0)*2.5), ccwMat), eastMat);\r\n\t\tvec3 newPos2 = transform(transform(pos + vec3(sin(t + 30.0)*3.25, cos(t + 8.0)*2.0, sin(t)*-1.5), ccwMat), eastMat);\t\r\n\t\tfloat bb2 = SDF_Sphere(newPos2, 1.1);//boxSDF(newPos2, vec3(1.1,1.1,1.1));\r\n\t\tif(bb2 < .015)\r\n\t\t{\t\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist2 = SDF_Mandlebulb(newPos2, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist2 = bb2;\r\n\t\t}\r\n\r\n\t\tfloat dist3;\r\n\t\t// vec3 newPos3 = transform(transform(pos + vec3(sin((t)/16.0)*3.0, -1, cos((t+75.0)/3.0)*2.0), cwMat), westMat);\r\n\t\tvec3 newPos3 = transform(transform(pos + vec3(cos(t+6.0)*3.25, -1.0*sin(t) + -0.5*cos(1.0), sin(t+12.0)*3.25), cwMat), westMat);\t\r\n\t\tfloat bb3 = SDF_Sphere(newPos3, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));\r\n\t\tif(bb3 < .015)\r\n\t\t{\r\n\t\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist3 = SDF_Mandlebulb(newPos3, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist3 = bb3;\r\n\t\t}\r\n\r\n\t\treturn un(dist1, un(dist2, dist3));\r\n\t}\r\n\telse if(sceneNumber == 2)\r\n\t{\r\n\t\t//SCENE 02------------------------------------------------------------\r\n\t\tfloat dist4;\r\n\t\tmat4 rotateX = mat4(1.0); rotateX[1][1] = 0.0; rotateX[1][2] = 1.0; rotateX[2][1] = -1.0; rotateX[2][2] = 0.0; //rotate 90 degress about x-axis\r\n\t\tfloat angY = 45.0*3.1415/180.0;\r\n\t\tmat4 rotateY = mat4(1.0); rotateY[0][0] = cos(angY); rotateY[0][2] = -sin(angY); rotateY[2][0] = sin(angY); rotateY[2][2] = cos(angY); //rotate 45 degrees about y-axis\r\n\t\tfloat angZ = (2.0*u_time)*3.1415/180.0;\r\n\t\tmat4 rotateZ = mat4(1.0); rotateZ[0][0] = cos(angZ); rotateZ[0][1] = sin(angZ); rotateZ[1][0] = -sin(angZ); rotateZ[1][1] = cos(angZ); //spin about z-axis\r\n\t\tfloat displace = pow(mod(u_time, 124.0)/(42.0), log(0.2) / log(0.5)) * 3.0; \r\n\t\tvec3 newPos4 = transform(transform(transform(pos + vec3(displace, 0, displace), rotateY), rotateZ), rotateX);\t\r\n\t\tfloat bb4 = SDF_Sphere(newPos4, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));\r\n\t\tif(bb4 < .015)\r\n\t\t{\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist4 = SDF_Mandlebulb(newPos4, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist4 = bb4;\r\n\t\t}\r\n\r\n\t\treturn dist4;\r\n\t}\r\n\telse \r\n\t{\r\n\t\t//SCENE 03------------------------------------------------------------\r\n\t\tfloat dist5;\r\n\t\tmat4 rotateX2 = mat4(1.0); rotateX2[1][1] = 0.0; rotateX2[1][2] = 1.0; rotateX2[2][1] = -1.0; rotateX2[2][2] = 0.0; //rotate 90 degress about x-axis\r\n\t\tfloat angY2 = -45.0*3.1415/180.0;\r\n\t\tmat4 rotateY2 = mat4(1.0); rotateY2[0][0] = cos(angY2); rotateY2[0][2] = -sin(angY2); rotateY2[2][0] = sin(angY2); rotateY2[2][2] = cos(angY2); //rotate 45 degrees about y-axis\r\n\t\tfloat angZ2 = (2.0*u_time)*3.1415/180.0;\r\n\t\tmat4 rotateZ2 = mat4(1.0); rotateZ2[0][0] = cos(angZ2); rotateZ2[0][2] = -sin(angZ2); rotateZ2[2][0] = sin(angZ2); rotateZ2[2][2] = cos(angZ2); //spin about y-axis\r\n\t\tvec3 newPos5 = transform(transform(transform(pos + vec3(3.0, -1.0, 3.0), rotateY2), rotateX2), rotateZ2);\t\r\n\t\tfloat bb5 = SDF_Sphere(newPos5, 1.1);//boxSDF(newPos3, vec3(1.1,1.1,1.1));\r\n\t\tif(bb5 < .015)\r\n\t\t{\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist5 = SDF_Mandlebulb(newPos5, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist5 = bb5;\r\n\t\t}\r\n\r\n\t\treturn dist5;\r\n\t}\r\n\t\r\n\t// dist1 = SDF_Mandlebulb(newPos1, 12.0);\r\n\t//return dist3;\r\n\t//return un(man1, un(man2, un(man3, un(man4, un(man5, un(man6, un(man7, un(man8, man9))))))));\r\n}\r\n\r\n// Compute the normal of an implicit surface using the gradient method\r\nvec3 computeNormal( vec3 pos ) {\r\n\tvec2 point = vec2(0.0001, 0.0);\r\n\tvec3 normal = normalize(\r\n\t\t\t   vec3(sceneMap2(pos + point.xyy) - sceneMap2(pos - point.xyy),\r\n\t\t\t\t\tsceneMap2(pos + point.yxy) - sceneMap2(pos - point.yxy),\r\n\t\t\t\t\tsceneMap2(pos + point.yyx) - sceneMap2(pos - point.yyx)));\r\n\treturn normal;\r\n}\r\n\r\n// Check for intersection with the scene for increasing t-values\r\nvec2 raymarchScene( vec3 origin, vec3 direction ) {\r\n\tfloat dist;\r\n\tfloat t = 0.01;\r\n\tfor(int i = 0; i < 500; i++) {\r\n\t\tfloat dist = sceneMap2(origin + t * direction);\r\n\t\tif(dist < 0.0001) {\r\n\t\t\treturn vec2(t, 1.0); // intersection\r\n\t\t} else if(t > T_MAX) {\r\n\t\t\tbreak;\r\n\t\t}\r\n\t\t#ifdef SPHERE_TRACING\r\n\t\t\tt += dist;\r\n\t\t#else\r\n\t\t\tt += 0.01;\r\n\t\t#endif\r\n\t}\r\n\treturn vec2(0.0, -1.0); // no intersection\r\n}\r\n\r\n\r\nfloat SpecHighlight( vec3 toCam, vec3 toLight, vec3 normal) {\r\n\tfloat dot = dot(normalize(toCam + toLight), normal);\r\n\treturn max(dot * dot * dot * dot * dot * dot * dot * dot, 0.0);\r\n}\r\n\r\n// Presentation by IQ: http://www.iquilezles.org/www/material/nvscene2008/rwwtt.pdf\r\nfloat ComputeAO( vec3 pos, vec3 normal ) {\r\n\tfloat tStep = 0.0025;\r\n\tfloat t = 0.0;\r\n\tfloat ao = 1.0;\r\n\tfloat diff = 0.0;\r\n\tfloat k = 72.0;\r\n\tfor(int i = 0; i < 5; i++) {\r\n\t\tvec3 sample = pos + t * normal;\r\n\t\tfloat dist = sceneMap2( sample );\r\n\t\tdiff += pow(0.5, float (i)) * (t - dist);\r\n\t\tt += tStep;\r\n\t}\r\n\tao -= clamp(k * diff, 0.0, 1.0);\r\n\treturn ao;\r\n}\r\n\r\n\r\nvec3 backgroundColor()\r\n{\r\n\tint sn = sceneNum();\r\n\tfloat darken; \r\n\tif(sn == 1)\r\n\t{\r\n\t\tdarken = abs(cos(sin(8.0*f_uv.x*sin(u_time/12.0) + 8.0) + f_uv.y*2.0));\r\n\t\tdarken *= abs(sin(cos(4.0*f_uv.y*2.0*sin(u_time/12.0) + 3.0) + f_uv.x*5.0));\r\n\t}\r\n\telse if(sn == 2)\r\n\t{\r\n\t\tdarken = cos(48.0*length(f_uv - vec2(0.5, 0.5)) + sin(80.0*f_uv.x*-f_uv.y) + cos(50.0*-f_uv.x*f_uv.y) + sin(u_time));\r\n\t}\r\n\telse\r\n\t{\r\n\t\tdarken = cos(length(f_uv - vec2(0.5, 0.5)));\r\n\t\tdarken += (0.5 - length(vec2(0.25*f_uv.x + 0.25, f_uv.y) - vec2(0.5, 0.0)))/0.5;\r\n\t}\r\n\t\r\n\tdarken = clamp(darken, 0.2, 1.0);\r\n\r\n\tvec3 a = vec3(0.5, 0.5, 0.5);\r\n\tvec3 b = vec3(0.5, 0.5, 0.5);\r\n\tvec3 c = vec3(2.0, 1.0, 1.0);\r\n\tvec3 d = vec3(0.5, 0.2, 0.25);\r\n\tfloat t = abs(sin(u_time/12.0));\r\n\tvec3 color = a + b*cos(6.28*(c*t + d));\r\n\r\n\treturn darken*color;\r\n}\r\n\r\n\r\nvoid main() {\r\n\t\r\n\t/** Raycasting **/\r\n\t\r\n\t// Convering gl_FragCoord to normalized device coordinates: http://www.txutxi.com/?p=182\r\n\tvec2 point_NDC = 2.0 * vec2(gl_FragCoord.x / u_resolution.x,\r\n\t\t\t\t\t\t\t\tgl_FragCoord.y / u_resolution.y) - 1.0;\r\n\r\n\tvec3 cameraPos = vec3(-3.5, 0, -3.5);\r\n\t//vec3 cameraPos = vec3(1, -4, 2);\r\n\t//vec3 cameraPos = vec3(1, 0, 1);\r\n\t\r\n\t// Circle the origin (0, 0, 0)\r\n\t// cameraPos.x = sin(u_time) * 10.0;\r\n\t// cameraPos.z = cos(u_time) * 10.0;\r\n\t\r\n\tfloat len = 10.0; // assume the reference point is at 0, 0, 0\r\n\t\r\n\t\r\n\t// Compute camera's frame of reference\r\n\tvec3 look = normalize(-cameraPos);\r\n\tvec3 right = normalize(cross(look, vec3(0.0, 1.0, 0.0))); // 0, 1, 0 is the world up vector\r\n\tvec3 up = normalize(cross(right, look));\r\n\t\r\n\tfloat tanAlpha = tan(u_fovy / 2.0);\r\n\tvec3 V = up * len * tanAlpha;\r\n\tvec3 H = right * len * u_aspect * tanAlpha;\r\n\t\r\n\t// Convert x/y components of gl_FragCoord to NDC, then to a world space point\r\n\tvec3 point_World = point_NDC.x * H + point_NDC.y * V;\r\n\t\r\n\t// Perform the raymarch\r\n\tvec3 direction = normalize(point_World - cameraPos);\r\n\tvec2 isect = raymarchScene( cameraPos, direction );\r\n\tvec3 isectPos = cameraPos + isect.x * direction;\r\n\t\r\n\t/** Shading and lighting **/\r\n\t\r\n\tif(isect.y > 0.0) { // we did intersect with something\r\n\t\tvec3 normal = computeNormal( isectPos );\r\n\t\t\r\n\t\t// Lighting\r\n\t\tvec3 baseMaterial = vec3(0.1, 0.2, 0.2);\r\n\t\tvec3 trapColor;\r\n\t\tint sn = sceneNum();\r\n\t\tif(sn == 1)\r\n\t\t{\r\n\t\t\ttrapColor = vec3(\r\n\t\t\t\tresColor.x-abs(sin((u_time)/2.0+isectPos.z)*0.8), \r\n\t\t\t\tresColor.y-(cos((u_time)/8.0+isectPos.y)*0.5), \r\n\t\t\t\tresColor.z+(cos((u_time)/2.0-isectPos.x)*0.2));\r\n\t\t}\r\n\t\telse if(sn == 2)\r\n\t\t{\r\n\t\t\ttrapColor = vec3(resColor) + vec3(0.4);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\ttrapColor = vec3(0.0, resColor.y+0.4, resColor.z+0.4);\r\n\t\t}\r\n\t\tvec3 sun = vec3(0.5, 0.4, 0.3) * 12.0;\r\n\t\tvec3 sunPos = vec3(5.0, 5.0, 0.0);\r\n\t\t\r\n\t\tvec3 toSun = normalize(sunPos - isectPos);\r\n\t\t\r\n\t\tnormal = -normal;\r\n\t\t\r\n\t\t// Visibility test\r\n\t\t// vec2 shadowTest = raymarchScene( isectPos, toSun );\r\n\t\t// float vis = 1.0;\r\n\t\t\r\n\t\t// if(shadowTest.y > 0.0) { // something is blocking this point\r\n\t\t// \tvis = 0.0;\r\n\t\t// }\r\n\t\t\r\n\t\t\r\n\t\t\r\n\t\t// Phong-ish shading for now\r\n\t\tfloat spec = SpecHighlight( -look, toSun, normal);\r\n\t\t\r\n\t\tfloat sunDot = clamp(dot( normal, toSun ), 0.0, 1.0);\r\n\t\tfloat ao = ComputeAO(isectPos, normal);\r\n\t\t\r\n\t\t// Apply lambertian shading - for now\r\n\t\t\r\n\t\t//gl_FragColor = ao*vec4(baseMaterial, 1.0);\r\n\t\tgl_FragColor = /*vis * */ao * vec4(((1.0 - spec) * trapColor * baseMaterial * sun /** vec3(sunDot)*/ + spec * vec3(0.1)), 1);\r\n\t\t//gl_FragColor = vec4(clamp(normal.x, 0.1, 0.9), -normal.y, normal.z, 1);\r\n\t} else {\r\n\t\t// Background color\r\n\t\tgl_FragColor = vec4(backgroundColor(), 1);\r\n\t}\r\n}\r\n"
+	module.exports = "/* \r\n\tCode written by Joseph Klinger and Tabatha Hickman\r\n\tUniversity of Pennsylvania\r\n\tCIS 700 Instructor: Rachel Hwang\r\n\tMay 2017\r\n*/\r\n\r\n#define SPHERE_TRACING true\r\n#define T_MAX 10.0\r\n\r\nvarying vec2 f_uv;\r\n\r\nuniform float u_time;\r\nuniform vec2 u_resolution;\r\nuniform float u_fovy;\r\nuniform float u_aspect;\r\n\r\nuniform mat4 u_cwMat;\r\nuniform mat4 u_ccwMat;\r\nuniform mat4 u_northMat;\r\nuniform mat4 u_southMat;\r\nuniform mat4 u_westMat;\r\nuniform mat4 u_eastMat;\r\nuniform mat4 u_rotateX1;\r\nuniform mat4 u_rotateY1;\r\nuniform mat4 u_rotateZ1;\r\nuniform mat4 u_rotateX2;\r\nuniform mat4 u_rotateY2;\r\nuniform mat4 u_rotateZ2;\r\n\r\n\r\nvec4 resColor;\r\n\r\n/***** Geometry SDF Functions\r\nhttp://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm\r\n\t\t\t\t\t\t\t  \t\t\t\t\t\t\t\t\t\t\t*****/\r\n\r\nfloat SDF_Sphere( vec3 pos, float radius ) {\r\n\treturn length(pos) - radius;\r\n}\r\n\r\n// Taken from IQ's realtime ShaderToy implementation here: https://www.shadertoy.com/view/ltfSWn\r\nfloat SDF_Mandelbulb( vec3 p , float manPower)\r\n{\r\n\tvec3 w = p;\r\n    float m = dot(w,w);\r\n\r\n    vec4 trap = vec4(abs(w),m);\r\n    float dz = 1.0;\r\n    \r\n    \r\n    for( int i = 0; i < 4; i++ )\r\n    {\r\n#if 1\r\n        float m2 = m*m;\r\n        float m4 = m2*m2;\r\n        dz = manPower*sqrt(m4*m2*m)*dz + 1.0;\r\n\r\n        float x = w.x; float x2 = x*x; float x4 = x2*x2;\r\n        float y = w.y; float y2 = y*y; float y4 = y2*y2;\r\n        float z = w.z; float z2 = z*z; float z4 = z2*z2;\r\n\r\n        float k3 = x2 + z2;\r\n        float k2 = inversesqrt( k3*k3*k3*k3*k3*k3*k3 );\r\n        float k1 = x4 + y4 + z4 - 6.0*y2*z2 - 6.0*x2*y2 + 2.0*z2*x2;\r\n        float k4 = x2 - y2 + z2;\r\n\r\n        w.x = p.x +  64.0*x*y*z*(x2-z2)*k4*(x4-6.0*x2*z2+z4)*k1*k2;\r\n        w.y = p.y + -16.0*y2*k3*k4*k4 + k1*k1;\r\n        w.z = p.z +  -8.0*y*k4*(x4*x4 - 28.0*x4*x2*z2 + 70.0*x4*z4 - 28.0*x2*z2*z4 + z4*z4)*k1*k2;\r\n#else\r\n        dz = 8.0*pow(m,3.5)*dz + 1.0;\r\n        \r\n        float r = length(w);\r\n        float b = 8.0*acos( clamp(w.y/r, -1.0, 1.0));\r\n        float a = 8.0*atan( w.x, w.z );\r\n        w = p + pow(r,8.0) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );\r\n#endif        \r\n        \r\n        trap = min( trap, vec4(abs(w),m) );\r\n\r\n        m = dot(w,w);\r\n        if( m > 4.0 )\r\n            break;\r\n    }\r\n    trap.x = m;\r\n    resColor = trap;\r\n\r\n    return 0.25 * log(m) * sqrt(m) / dz;\r\n}\r\n\r\n// SDF Operators:\r\nfloat intersection(float d1, float d2) {\r\n    return max(d1,d2);\r\n}\r\n\r\nfloat subtraction( float d1, float d2 ) {\r\n    return max(-d1,d2);\r\n}\r\n\r\nfloat un(float d1, float d2) {\r\n    return min(d1,d2);\r\n}\r\n\r\n// Returns transformed point based on rotation and translation matrix of shape\r\nvec3 transform( vec3 point, mat4 trans ) {\r\n\t//columns of the rotation matrix transpose\r\n\tvec3 col1 = vec3(trans[0][0], trans[1][0], trans[2][0]);\r\n\tvec3 col2 = vec3(trans[0][1], trans[1][1], trans[2][1]);\r\n\tvec3 col3 = vec3(trans[0][2], trans[1][2], trans[2][2]);\r\n\r\n\tmat3 rotTranspose = mat3(col1, col2, col3);\r\n\r\n\tvec3 col4 = -1.0*rotTranspose*vec3(trans[3]);\r\n\r\n\tmat4 newTrans = mat4(vec4(col1, 0.0), vec4(col2, 0.0), vec4(col3, 0.0), vec4(col4, 1.0));\r\n\r\n\treturn vec3(newTrans * vec4(point, 1.0));\r\n}\r\n\r\nfloat mod(int num1, int num2)\r\n{\r\n\tint div = num1/num2;\r\n\treturn float(num1 - div*num2);\r\n}\r\n\r\n// Decide which scene to display (time - dependent)\r\nint sceneNum()\r\n{\r\n\tfloat x = u_time;\r\n\tfloat cycle = 124.0;\r\n\tfloat fps = 6.0;\r\n\tfloat t = mod(x, cycle);\r\n\tif(t <= 42.0) { return 2; }\r\n\telse if(t <= 80.0) { return 1; }\r\n\telse { return 3; }\r\n}\r\n\r\n// Estimate the distance to the objects in the scene depending on the sceneNum() (see above)\r\nfloat sceneMap( vec3 pos ) {\r\n\tfloat t = u_time/4.0;\r\n\tint sceneNumber = sceneNum();\r\n\r\n\tif(sceneNumber == 1)\r\n\t{\r\n\t\t//SCENE 01------------------------------------------------------------\r\n\t\tfloat dist1;\r\n\t\tvec3 newPos1 = transform(transform(pos + vec3(sin(t)*3.25, sin(t)*2.0, cos(t)*3.25), u_cwMat), u_northMat);\t\r\n\t\tfloat bb1 = SDF_Sphere(newPos1, 1.1);\r\n\t\tif(bb1 < .015)\r\n\t\t{\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist1 = SDF_Mandelbulb(newPos1, power);\r\n\t\t}\t\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist1 = bb1;\r\n\t\t}\r\n\r\n\t\tfloat dist2;\r\n\t\tvec3 newPos2 = transform(transform(pos + vec3(sin(t + 30.0)*3.25, cos(t + 8.0)*2.0, sin(t)*-1.5), u_ccwMat), u_eastMat);\t\r\n\t\tfloat bb2 = SDF_Sphere(newPos2, 1.1);\r\n\t\tif(bb2 < .015)\r\n\t\t{\t\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist2 = SDF_Mandelbulb(newPos2, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist2 = bb2;\r\n\t\t}\r\n\r\n\t\tfloat dist3;\r\n\t\tvec3 newPos3 = transform(transform(pos + vec3(cos(t+6.0)*3.25, -1.0*sin(t) + -0.5*cos(1.0), sin(t+12.0)*3.25), u_cwMat), u_westMat);\t\r\n\t\tfloat bb3 = SDF_Sphere(newPos3, 1.1);\r\n\t\tif(bb3 < .015)\r\n\t\t{\r\n\t\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist3 = SDF_Mandelbulb(newPos3, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist3 = bb3;\r\n\t\t}\r\n\r\n\t\treturn un(dist1, un(dist2, dist3));\r\n\t}\r\n\telse if(sceneNumber == 2)\r\n\t{\r\n\t\t//SCENE 02------------------------------------------------------------\r\n\t\tfloat dist4;\r\n\t\tfloat displace = pow(mod(u_time, 124.0)/(42.0), log(0.2) / log(0.5)) * 3.0; \r\n\t\tvec3 newPos4 = transform(transform(transform(pos + vec3(displace, 0, displace), u_rotateY1), u_rotateZ1), u_rotateX1);\t\r\n\t\tfloat bb4 = SDF_Sphere(newPos4, 1.1);\r\n\t\tif(bb4 < .015)\r\n\t\t{\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist4 = SDF_Mandelbulb(newPos4, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist4 = bb4;\r\n\t\t}\r\n\r\n\t\treturn dist4;\r\n\t}\r\n\telse \r\n\t{\r\n\t\t//SCENE 03------------------------------------------------------------\r\n\t\tfloat dist5;\r\n\t\tvec3 newPos5 = transform(transform(transform(pos + vec3(3.0, -1.0, 3.0), u_rotateY2), u_rotateX2), u_rotateZ2);\t\r\n\t\tfloat bb5 = SDF_Sphere(newPos5, 1.1);\r\n\t\tif(bb5 < .015)\r\n\t\t{\t\r\n\t\t\tfloat power = 10.0;\r\n\t\t\tdist5 = SDF_Mandelbulb(newPos5, power);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tdist5 = bb5;\r\n\t\t}\r\n\r\n\t\treturn dist5;\r\n\t}\r\n}\r\n\r\nvec3 backgroundColor() {\r\n\tint sn = sceneNum();\r\n\tfloat darken; \r\n\tif(sn == 1)\r\n\t{\r\n\t\tdarken = abs(cos(sin(8.0*f_uv.x*sin(u_time/12.0) + 8.0) + f_uv.y*2.0));\r\n\t\tdarken *= abs(sin(cos(4.0*f_uv.y*2.0*sin(u_time/12.0) + 3.0) + f_uv.x*5.0));\r\n\t}\r\n\telse if(sn == 2)\r\n\t{\r\n\t\tdarken = cos(48.0*length(f_uv - vec2(0.5, 0.5)) + sin(80.0*f_uv.x*-f_uv.y) + cos(50.0*-f_uv.x*f_uv.y) + sin(u_time));\r\n\t}\r\n\telse\r\n\t{\r\n\t\tdarken = cos(length(f_uv - vec2(0.5, 0.5)));\r\n\t\tdarken += (0.5 - length(vec2(0.25*f_uv.x + 0.25, f_uv.y) - vec2(0.5, 0.0)))/0.5;\r\n\t}\r\n\t\r\n\tdarken = clamp(darken, 0.2, 1.0);\r\n\r\n\tvec3 a = vec3(0.5, 0.5, 0.5);\r\n\tvec3 b = vec3(0.5, 0.5, 0.5);\r\n\tvec3 c = vec3(2.0, 1.0, 1.0);\r\n\tvec3 d = vec3(0.5, 0.2, 0.25);\r\n\tfloat t = abs(sin(u_time/12.0));\r\n\tvec3 color = a + b*cos(6.28*(c*t + d));\r\n\r\n\treturn darken*color;\r\n}\r\n\r\n// Compute the normal of an implicit surface using the gradient method\r\n// Note: this method is slightly less accurate than sampling the scene at pos - epsilon, but because that is an expensive operation for the mandelbulb, we avoid it here\r\nvec3 computeNormalFast( vec3 pos ) {\r\n\tvec2 point = vec2(0.0001, 0.0);\r\n\tfloat sampleAtPos = sceneMap(pos);\r\n\tvec3 normal = normalize(\r\n\t\t\t   vec3(sceneMap(pos + point.xyy) - sampleAtPos,\r\n\t\t\t\t\tsceneMap(pos + point.yxy) - sampleAtPos,\r\n\t\t\t\t\tsceneMap(pos + point.yyx) - sampleAtPos));\r\n\treturn normal;\r\n}\r\n\r\n// Taken from a presentation by IQ: http://www.iquilezles.org/www/material/nvscene2008/rwwtt.pdf\r\nfloat ComputeAO( vec3 pos, vec3 normal ) {\r\n\tfloat tStep = 0.0025;\r\n\tfloat diff = 0.0;\r\n\tfloat k = 34.0;\r\n\tfor(float i = 1.0; i <= 5.0; i += 1.0) {\r\n\t\tvec3 sample = pos + (i * tStep) * normal;\r\n\t\tfloat dist = sceneMap( sample );\r\n\t\tdiff += pow(0.5, i) * ((i * tStep) - dist);\r\n\t}\r\n\treturn 1.0 - clamp(k * diff, 0.0, 0.9);\r\n}\r\n\r\n// Convert a fragment coordinate to normalized device coordinates\r\nvec2 FragCoordToNDC( vec4 fragCoord ) {\r\n\treturn 2.0 * vec2(fragCoord.x / u_resolution.x,\r\n\t\t\t\t\t  fragCoord.y / u_resolution.y) - 1.0;\r\n}\r\n\r\n// Return the direction of a ray cast through the given point in NDC\r\n// This function includes the implementation of the camera; changes to the camera should be made here\r\nvec3 Raycast( vec2 p_ndc, vec3 cameraPos ) {\r\n\t\r\n\tfloat len = 10.0;\r\n\t\r\n\t// Compute camera's frame of reference\r\n\tvec3 look = normalize(-cameraPos); // Assume we are looking towards (0, 0, 0)\r\n\tvec3 right = normalize(cross(look, vec3(0.0, 1.0, 0.0))); // 0, 1, 0 is the world up vector\r\n\tvec3 up = normalize(cross(right, look));\r\n\t\r\n\tfloat tanAlpha = tan(u_fovy / 2.0);\r\n\tvec3 V = up * len * tanAlpha;\r\n\tvec3 H = right * len * u_aspect * tanAlpha;\r\n\t\r\n\t// Convert x/y components of gl_FragCoord to NDC, then to a world space point\r\n\tvec3 point_World = p_ndc.x * H + p_ndc.y * V;\r\n\t\r\n\t// Return the direction\r\n\treturn normalize(point_World - cameraPos);\r\n}\r\n\r\n// Referencing the following report: http://celarek.at/wp/wp-content/uploads/2014/05/realTimeFractalsReport.pdf\r\nvec3 raymarchScene( vec3 origin, vec3 direction ) {\r\n\t// Basic Raymarching function: \r\n\tfloat t = 0.01;\r\n\tvec3 result = vec3(0.0);\r\n\t\r\n\tfor(int i = 1; i <= 250; i++) {\r\n\t\tfloat dist = sceneMap(origin + t * direction);\r\n\t\t\r\n\t\tif(abs(dist) < 0.0002) {\r\n\t\t\tresult = vec3(t, float (i) / 1000.0, 1.0);\r\n\t\t\tbreak;\r\n\t\t} else if(t > T_MAX) {\r\n\t\t\tresult = vec3(T_MAX, float (i) / 1000.0, 0.0);\r\n\t\t\tbreak;\r\n\t\t}\r\n\t\t\r\n\t\t#ifdef SPHERE_TRACING\r\n\t\t\tt += dist;\r\n\t\t#else\r\n\t\t\tt += 0.01;\r\n\t\t#endif\r\n\t}\r\n\treturn result;\r\n}\r\n\r\nvoid main() {\r\n\tvec3 cameraPos = vec3(-3.5, 0, -3.5);\r\n\tvec2 point_NDC = FragCoordToNDC(gl_FragCoord);\r\n\tvec3 direction = Raycast(point_NDC, cameraPos);\r\n\t\r\n\tvec3 isect = raymarchScene( cameraPos, direction );\r\n\tvec3 isectPos = cameraPos + isect.x * direction;\r\n\t\r\n\tif(isect.z > 0.0) { // we did intersect with something\r\n\t\tvec3 normal = computeNormalFast( isectPos );\r\n\t\tnormal = -normal;\r\n\t\t\r\n\t\t// Animated color using orbit traps: see the Mandelbulb SDF by IQ above\r\n\t\tvec3 trapColor;\r\n\t\t\r\n\t\tint sn = sceneNum();\r\n\t\tif(sn == 1)\r\n\t\t{\r\n\t\t\ttrapColor = vec3(\r\n\t\t\t\tresColor.x-abs(sin((u_time) / 2.0 + isectPos.z) * 0.8), \r\n\t\t\t\tresColor.y-(cos((u_time) / 8.0 + isectPos.y) * 0.5), \r\n\t\t\t\tresColor.z+(cos((u_time) / 2.0 - isectPos.x) * 0.2));\r\n\t\t}\r\n\t\telse if(sn == 2)\r\n\t\t{\r\n\t\t\ttrapColor = vec3(resColor) + vec3(0.4);\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\ttrapColor = vec3(0.0, resColor.y + 0.4, resColor.z + 0.4);\r\n\t\t}\r\n\t\t\r\n\t\ttrapColor.r *= 0.01;\r\n\t\t\r\n\t\t// Two methods to compute AO:\r\n\t\tfloat ao = ComputeAO(isectPos, normal);\r\n\t\t// float fakeAO = 1.0 - clamp(isect.y, 0.0, 0.9);\r\n\t\t\r\n\t\tgl_FragColor = ao * vec4(trapColor, 1);\r\n\t\t// gl_FragColor = fakeAO * vec4(trapColor, 1);\r\n\t} else {\r\n\t\tgl_FragColor = vec4(backgroundColor(), 1);\r\n\t}\r\n}\r\n"
 
 /***/ }),
 /* 16 */
+/***/ (function(module, exports) {
+
+	module.exports = "/* \r\n\tCode written by Joseph Klinger and Tabatha Hickman\r\n\tUniversity of Pennsylvania\r\n\tCIS 700 Instructor: Rachel Hwang\r\n\tMay 2017\r\n*/\r\n\r\n#define SPHERE_TRACING true\r\n#define T_MAX 12.0\r\n#define MOTION_BLUR true\r\n\r\nvarying vec2 f_uv;\r\n\r\nuniform sampler2D u_firstPass;\r\nuniform sampler2D u_previousFrame;\r\n\r\n// The sole purpose of this pass is to compute motion blur between the current and previous frames\r\nvoid main() {\r\n\t#ifdef MOTION_BLUR\r\n\t\tfor(float w = 0.0; w <= 1.0; w += 0.2) {\r\n\t\t\tgl_FragColor += (1.0 - w) * texture2D(u_firstPass, f_uv) + w * texture2D(u_previousFrame, f_uv);\r\n\t\t}\r\n\t\tgl_FragColor /= 1.0 / 0.2; // divide by the number of samples (1 / stepSize)\r\n\t#else\r\n\t\tgl_FragColor = texture2D(u_firstPass, f_uv);\r\n\t#endif\r\n}\r\n"
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+	module.exports = "/* \r\n\tCode written by Joseph Klinger and Tabatha Hickman\r\n\tUniversity of Pennsylvania\r\n\tCIS 700 Instructor: Rachel Hwang\r\n\tMay 2017\r\n*/\r\n\r\nvarying vec2 f_uv;\r\n\r\nuniform sampler2D u_input;\r\n\r\nvoid main() {\r\n\tgl_FragColor = texture2D(u_input, f_uv);\r\n}\r\n"
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "index.html";
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports) {
 
 	module.exports = function( THREE ) {
